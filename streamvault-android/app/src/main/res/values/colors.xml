@@ -1,0 +1,39 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- AMOLED Black Base -->
+    <color name="black_amoled">#FF000000</color>
+    <color name="black_surface">#FF0A0A0A</color>
+    <color name="black_card">#FF111111</color>
+    <color name="black_elevated">#FF1A1A1A</color>
+
+    <!-- Accent Colors -->
+    <color name="accent_primary">#FFE50914</color>
+    <color name="accent_secondary">#FFFF6B35</color>
+    <color name="accent_tertiary">#FF00D4FF</color>
+    <color name="accent_gold">#FFFFD700</color>
+
+    <!-- Glass Effect -->
+    <color name="glass_surface">#33FFFFFF</color>
+    <color name="glass_border">#22FFFFFF</color>
+    <color name="glass_tint">#11FFFFFF</color>
+
+    <!-- Text Colors -->
+    <color name="text_primary">#FFFFFFFF</color>
+    <color name="text_secondary">#CCFFFFFF</color>
+    <color name="text_tertiary">#88FFFFFF</color>
+    <color name="text_disabled">#44FFFFFF</color>
+
+    <!-- Status Colors -->
+    <color name="success">#FF4CAF50</color>
+    <color name="warning">#FFFFC107</color>
+    <color name="error">#FFF44336</color>
+    <color name="info">#FF2196F3</color>
+
+    <!-- Gradient Colors -->
+    <color name="gradient_start">#FF0A0A0A</color>
+    <color name="gradient_mid">#88000000</color>
+    <color name="gradient_end">#00000000</color>
+
+    <!-- Seed colors for Material You -->
+    <color name="seed">#FFE50914</color>
+</resources>

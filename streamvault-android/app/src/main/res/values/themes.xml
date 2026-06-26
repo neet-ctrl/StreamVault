@@ -1,0 +1,27 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <style name="Theme.StreamVault" parent="Theme.Material3.Dark.NoActionBar">
+        <item name="colorPrimary">@color/accent_primary</item>
+        <item name="colorOnPrimary">@color/text_primary</item>
+        <item name="colorPrimaryContainer">@color/black_card</item>
+        <item name="colorOnPrimaryContainer">@color/text_primary</item>
+        <item name="colorSecondary">@color/accent_secondary</item>
+        <item name="colorOnSecondary">@color/text_primary</item>
+        <item name="colorTertiary">@color/accent_tertiary</item>
+        <item name="colorSurface">@color/black_surface</item>
+        <item name="colorOnSurface">@color/text_primary</item>
+        <item name="colorBackground">@color/black_amoled</item>
+        <item name="colorOnBackground">@color/text_primary</item>
+        <item name="android:statusBarColor">@android:color/transparent</item>
+        <item name="android:navigationBarColor">@android:color/transparent</item>
+        <item name="android:windowLayoutInDisplayCutoutMode">shortEdges</item>
+        <item name="android:windowBackground">@color/black_amoled</item>
+    </style>
+
+    <style name="Theme.StreamVault.Splash" parent="Theme.SplashScreen">
+        <item name="windowSplashScreenBackground">@color/black_amoled</item>
+        <item name="windowSplashScreenAnimatedIcon">@drawable/ic_splash_logo</item>
+        <item name="windowSplashScreenAnimationDuration">1000</item>
+        <item name="postSplashScreenTheme">@style/Theme.StreamVault</item>
+    </style>
+</resources>

@@ -1,0 +1,1 @@
+- [StreamVault Android](streamvault-android.md) — Full Android APK project under streamvault-android/, built only via GitHub Actions (no local builds), TMDB + multi-addon stremio resolver.
