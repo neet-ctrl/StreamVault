@@ -1,19 +1,23 @@
 package com.streamvault.app.presentation.ui.navigation
 
-import androidx.compose.animation.fadeIn
-import androidx.compose.animation.fadeOut
-import androidx.compose.animation.slideInHorizontally
-import androidx.compose.animation.slideOutHorizontally
+import androidx.compose.animation.*
+import androidx.compose.animation.core.*
 import androidx.compose.foundation.background
-import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.border
+import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.*
+import androidx.compose.material.icons.outlined.*
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.Brush
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.unit.dp
 import androidx.navigation.*
 import androidx.navigation.compose.*
 import com.streamvault.app.domain.model.Stream
@@ -54,18 +58,18 @@ data class BottomNavItem(
 )
 
 val bottomNavItems = listOf(
-    BottomNavItem(Screen.Home, "Home", Icons.Default.Home),
-    BottomNavItem(Screen.Search, "Search", Icons.Default.Search),
-    BottomNavItem(Screen.Library, "Library", Icons.Default.BookmarkBorder, Icons.Default.Bookmark),
-    BottomNavItem(Screen.Downloads, "Downloads", Icons.Default.Download),
-    BottomNavItem(Screen.Settings, "Settings", Icons.Default.Settings)
+    BottomNavItem(Screen.Home, "Home", Icons.Outlined.Home, Icons.Filled.Home),
+    BottomNavItem(Screen.Search, "Search", Icons.Outlined.Search, Icons.Filled.Search),
+    BottomNavItem(Screen.Library, "Library", Icons.Outlined.BookmarkBorder, Icons.Filled.Bookmark),
+    BottomNavItem(Screen.Downloads, "Downloads", Icons.Outlined.Download, Icons.Filled.Download),
+    BottomNavItem(Screen.Settings, "Settings", Icons.Outlined.Settings, Icons.Filled.Settings)
 )
 
 @Composable
 fun AppNavigation() {
     val navController = rememberNavController()
     var showSplash by remember { mutableStateOf(true) }
-    var pendingStream by remember { mutableStateOf<Pair<Stream, Pair<Int, String>>?>(null) }
+    var pendingStream by remember { mutableStateOf<Triple<Stream, Int, String>?>(null) }
 
     if (showSplash) {
         SplashScreen(onSplashComplete = { showSplash = false })
@@ -79,42 +83,15 @@ fun AppNavigation() {
     Scaffold(
         containerColor = AmoledBlack,
         bottomBar = {
-            if (showBottomBar) {
-                NavigationBar(
-                    containerColor = BlackSurface,
-                    contentColor = AccentRed,
-                    tonalElevation = 0.dp
-                ) {
-                    bottomNavItems.forEach { item ->
-                        val selected = currentRoute == item.screen.route
-                        NavigationBarItem(
-                            selected = selected,
-                            onClick = {
-                                if (!selected) {
-                                    navController.navigate(item.screen.route) {
-                                        popUpTo(Screen.Home.route) { saveState = true }
-                                        launchSingleTop = true
-                                        restoreState = true
-                                    }
-                                }
-                            },
-                            icon = {
-                                Icon(
-                                    if (selected) item.selectedIcon else item.icon,
-                                    contentDescription = item.label
-                                )
-                            },
-                            label = { Text(item.label) },
-                            colors = NavigationBarItemDefaults.colors(
-                                selectedIconColor = AccentRed,
-                                selectedTextColor = AccentRed,
-                                unselectedIconColor = TextTertiary,
-                                unselectedTextColor = TextTertiary,
-                                indicatorColor = AccentRed.copy(alpha = 0.15f)
-                            )
-                        )
-                    }
-                }
+            AnimatedVisibility(
+                visible = showBottomBar,
+                enter = slideInVertically { it } + fadeIn(),
+                exit = slideOutVertically { it } + fadeOut()
+            ) {
+                PremiumBottomBar(
+                    navController = navController,
+                    currentRoute = currentRoute
+                )
             }
         }
     ) { paddingValues ->
@@ -125,10 +102,30 @@ fun AppNavigation() {
                 .fillMaxSize()
                 .padding(paddingValues)
                 .background(AmoledBlack),
-            enterTransition = { slideInHorizontally { it } + fadeIn() },
-            exitTransition = { slideOutHorizontally { -it } + fadeOut() },
-            popEnterTransition = { slideInHorizontally { -it } + fadeIn() },
-            popExitTransition = { slideOutHorizontally { it } + fadeOut() }
+            enterTransition = {
+                slideInHorizontally(
+                    initialOffsetX = { it },
+                    animationSpec = tween(300, easing = EaseOutCubic)
+                ) + fadeIn(tween(300))
+            },
+            exitTransition = {
+                slideOutHorizontally(
+                    targetOffsetX = { -it / 3 },
+                    animationSpec = tween(300, easing = EaseInCubic)
+                ) + fadeOut(tween(200))
+            },
+            popEnterTransition = {
+                slideInHorizontally(
+                    initialOffsetX = { -it / 3 },
+                    animationSpec = tween(300, easing = EaseOutCubic)
+                ) + fadeIn(tween(300))
+            },
+            popExitTransition = {
+                slideOutHorizontally(
+                    targetOffsetX = { it },
+                    animationSpec = tween(300, easing = EaseInCubic)
+                ) + fadeOut(tween(200))
+            }
         ) {
             composable(Screen.Home.route) {
                 HomeScreen(
@@ -182,7 +179,7 @@ fun AppNavigation() {
                     imdbId = imdbId,
                     onBack = { navController.popBackStack() },
                     onStreamSelected = { stream ->
-                        pendingStream = stream to (0 to "Now Playing")
+                        pendingStream = Triple(stream, 0, "Now Playing")
                         navController.navigate(Screen.Player.createRoute(0, "Now Playing"))
                     }
                 )
@@ -194,21 +191,17 @@ fun AppNavigation() {
                     navArgument("movieId") { type = NavType.IntType },
                     navArgument("title") { type = NavType.StringType }
                 )
-            ) { backStackEntry ->
-                val movieId = backStackEntry.arguments?.getInt("movieId") ?: 0
-                val title = backStackEntry.arguments?.getString("title") ?: "Now Playing"
-                val (stream, meta) = pendingStream ?: return@composable
+            ) {
+                val triple = pendingStream ?: return@composable
                 PlayerScreen(
-                    stream = stream,
-                    movieId = meta.first,
-                    title = meta.second,
+                    stream = triple.first,
+                    movieId = triple.second,
+                    title = triple.third,
                     onBack = { navController.popBackStack() }
                 )
             }
 
-            composable(Screen.Downloads.route) {
-                DownloadsScreen()
-            }
+            composable(Screen.Downloads.route) { DownloadsScreen() }
 
             composable(Screen.Library.route) {
                 LibraryScreen(
@@ -218,9 +211,108 @@ fun AppNavigation() {
                 )
             }
 
-            composable(Screen.Settings.route) {
-                SettingsScreen()
+            composable(Screen.Settings.route) { SettingsScreen() }
+        }
+    }
+}
+
+@Composable
+private fun PremiumBottomBar(navController: NavController, currentRoute: String?) {
+    Box(
+        modifier = Modifier
+            .fillMaxWidth()
+            .background(
+                Brush.verticalGradient(colors = listOf(Color.Transparent, BlackSurface))
+            )
+            .navigationBarsPadding()
+    ) {
+        Box(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(horizontal = 12.dp, vertical = 8.dp)
+                .clip(RoundedCornerShape(24.dp))
+                .background(BlackCard)
+                .border(0.5.dp, BlackBorder, RoundedCornerShape(24.dp))
+                .padding(horizontal = 8.dp, vertical = 8.dp)
+        ) {
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceEvenly,
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                bottomNavItems.forEach { item ->
+                    val selected = currentRoute == item.screen.route
+                    BottomNavIcon(
+                        item = item,
+                        selected = selected,
+                        onClick = {
+                            if (!selected) {
+                                navController.navigate(item.screen.route) {
+                                    popUpTo(Screen.Home.route) { saveState = true }
+                                    launchSingleTop = true
+                                    restoreState = true
+                                }
+                            }
+                        }
+                    )
+                }
             }
         }
     }
 }
+
+@Composable
+private fun BottomNavIcon(
+    item: BottomNavItem,
+    selected: Boolean,
+    onClick: () -> Unit
+) {
+    val scale by animateFloatAsState(
+        targetValue = if (selected) 1.1f else 1f,
+        animationSpec = spring(stiffness = Spring.StiffnessMediumLow),
+        label = "nav_scale"
+    )
+
+    Box(
+        modifier = Modifier
+            .clip(RoundedCornerShape(16.dp))
+            .background(
+                if (selected)
+                    Brush.linearGradient(listOf(AccentRed.copy(alpha = 0.2f), AccentRed.copy(alpha = 0.1f)))
+                else
+                    Brush.linearGradient(listOf(Color.Transparent, Color.Transparent))
+            )
+            .then(
+                if (selected)
+                    Modifier.border(0.5.dp, AccentRed.copy(alpha = 0.3f), RoundedCornerShape(16.dp))
+                else
+                    Modifier
+            )
+            .clickable(onClick = onClick)
+            .padding(horizontal = 16.dp, vertical = 9.dp),
+        contentAlignment = Alignment.Center
+    ) {
+        Column(
+            horizontalAlignment = Alignment.CenterHorizontally,
+            verticalArrangement = Arrangement.spacedBy(3.dp)
+        ) {
+            Icon(
+                if (selected) item.selectedIcon else item.icon,
+                contentDescription = item.label,
+                tint = if (selected) AccentRed else TextTertiary,
+                modifier = Modifier.size(22.dp)
+            )
+            if (selected) {
+                Box(
+                    modifier = Modifier
+                        .size(4.dp)
+                        .clip(RoundedCornerShape(2.dp))
+                        .background(AccentRed)
+                )
+            }
+        }
+    }
+}
+
+private val EaseOutCubic = CubicBezierEasing(0.33f, 1f, 0.68f, 1f)
+private val EaseInCubic = CubicBezierEasing(0.32f, 0f, 0.67f, 0f)

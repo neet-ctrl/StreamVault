@@ -1,19 +1,18 @@
 package com.streamvault.app.presentation.ui.screens.player
 
 import android.app.Activity
-import android.content.Context
-import android.view.View
 import android.view.WindowInsets
 import android.view.WindowInsetsController
 import androidx.annotation.OptIn
-import androidx.compose.animation.AnimatedVisibility
-import androidx.compose.animation.fadeIn
-import androidx.compose.animation.fadeOut
+import androidx.compose.animation.*
+import androidx.compose.animation.core.*
 import androidx.compose.foundation.background
+import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.gestures.detectTapGestures
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.*
 import androidx.compose.material3.*
@@ -21,6 +20,7 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.platform.LocalContext
@@ -70,9 +70,7 @@ fun PlayerScreen(
 
     DisposableEffect(exoPlayer) {
         val listener = object : Player.Listener {
-            override fun onIsPlayingChanged(isPlaying: Boolean) {
-                viewModel.onPlayPause()
-            }
+            override fun onIsPlayingChanged(isPlaying: Boolean) {}
             override fun onPlaybackStateChanged(playbackState: Int) {
                 viewModel.onBufferingChanged(playbackState == Player.STATE_BUFFERING)
             }
@@ -93,6 +91,7 @@ fun PlayerScreen(
         }
     }
 
+    // Hide system bars for immersive mode
     DisposableEffect(context) {
         val activity = context as? Activity
         activity?.window?.let { window ->
@@ -120,7 +119,7 @@ fun PlayerScreen(
                     onTap = { viewModel.toggleControls() },
                     onDoubleTap = { offset ->
                         if (offset.x < size.width / 2) {
-                            exoPlayer.seekTo(exoPlayer.currentPosition - 10_000)
+                            exoPlayer.seekTo((exoPlayer.currentPosition - 10_000).coerceAtLeast(0))
                         } else {
                             exoPlayer.seekTo(exoPlayer.currentPosition + 10_000)
                         }
@@ -128,6 +127,7 @@ fun PlayerScreen(
                 )
             }
     ) {
+        // Video surface
         AndroidView(
             factory = { ctx ->
                 PlayerView(ctx).apply {
@@ -139,115 +139,306 @@ fun PlayerScreen(
             modifier = Modifier.fillMaxSize()
         )
 
-        if (state.isBuffering) {
-            CircularProgressIndicator(
-                modifier = Modifier.align(Alignment.Center),
-                color = AccentRed,
-                strokeWidth = 3.dp
-            )
+        // Buffering indicator
+        AnimatedVisibility(
+            visible = state.isBuffering,
+            enter = fadeIn(),
+            exit = fadeOut(),
+            modifier = Modifier.align(Alignment.Center)
+        ) {
+            Box(
+                modifier = Modifier
+                    .size(64.dp)
+                    .clip(CircleShape)
+                    .background(Color(0x88000000))
+                    .border(1.dp, Color.White.copy(alpha = 0.1f), CircleShape),
+                contentAlignment = Alignment.Center
+            ) {
+                CircularProgressIndicator(
+                    modifier = Modifier.size(32.dp),
+                    color = AccentRed,
+                    strokeWidth = 2.5.dp
+                )
+            }
         }
 
+        // Skip ripple feedback
+        var showSkipLeft by remember { mutableStateOf(false) }
+        var showSkipRight by remember { mutableStateOf(false) }
+
+        // Controls overlay
         AnimatedVisibility(
             visible = state.isControlsVisible && !state.isLocked,
-            enter = fadeIn(),
-            exit = fadeOut()
+            enter = fadeIn(tween(200)),
+            exit = fadeOut(tween(300))
         ) {
             Box(modifier = Modifier.fillMaxSize()) {
+                // Cinematic gradient overlay
                 Box(
                     modifier = Modifier
                         .fillMaxSize()
-                        .background(Color(0x88000000))
+                        .background(
+                            Brush.verticalGradient(
+                                colorStops = arrayOf(
+                                    0.0f to Color(0xCC000000),
+                                    0.25f to Color(0x44000000),
+                                    0.5f to Color.Transparent,
+                                    0.75f to Color(0x44000000),
+                                    1.0f to Color(0xCC000000)
+                                )
+                            )
+                        )
                 )
 
+                // Top bar
                 Row(
                     modifier = Modifier
                         .fillMaxWidth()
                         .statusBarsPadding()
-                        .padding(16.dp),
+                        .padding(horizontal = 16.dp, vertical = 12.dp),
                     horizontalArrangement = Arrangement.SpaceBetween,
                     verticalAlignment = Alignment.CenterVertically
                 ) {
-                    IconButton(
-                        onClick = onBack,
+                    Box(
                         modifier = Modifier
                             .size(40.dp)
                             .clip(CircleShape)
-                            .background(Color(0x55000000))
+                            .background(Color(0x66000000))
+                            .border(0.5.dp, Color.White.copy(alpha = 0.15f), CircleShape)
+                            .clickable { onBack() },
+                        contentAlignment = Alignment.Center
                     ) {
-                        Icon(Icons.Default.ArrowBack, contentDescription = "Back", tint = TextPrimary)
+                        Icon(
+                            Icons.Default.ArrowBack,
+                            contentDescription = "Back",
+                            tint = TextPrimary,
+                            modifier = Modifier.size(20.dp)
+                        )
                     }
-                    Text(
-                        text = title,
-                        color = TextPrimary,
-                        fontSize = 16.sp,
-                        fontWeight = FontWeight.SemiBold,
-                        modifier = Modifier.weight(1f).padding(horizontal = 8.dp)
-                    )
-                    IconButton(onClick = viewModel::toggleLock) {
-                        Icon(Icons.Default.Lock, contentDescription = "Lock", tint = TextSecondary)
+
+                    Column(
+                        modifier = Modifier.weight(1f).padding(horizontal = 12.dp),
+                        horizontalAlignment = Alignment.CenterHorizontally
+                    ) {
+                        Text(
+                            text = title,
+                            color = TextPrimary,
+                            fontSize = 15.sp,
+                            fontWeight = FontWeight.SemiBold,
+                            maxLines = 1
+                        )
+                        Text(
+                            text = stream.quality + " • " + stream.provider,
+                            color = TextTertiary,
+                            fontSize = 11.sp
+                        )
+                    }
+
+                    Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                        Box(
+                            modifier = Modifier
+                                .size(40.dp)
+                                .clip(CircleShape)
+                                .background(Color(0x66000000))
+                                .border(0.5.dp, Color.White.copy(alpha = 0.15f), CircleShape)
+                                .clickable { viewModel.toggleLock() },
+                            contentAlignment = Alignment.Center
+                        ) {
+                            Icon(
+                                Icons.Default.Lock,
+                                contentDescription = "Lock",
+                                tint = TextSecondary,
+                                modifier = Modifier.size(18.dp)
+                            )
+                        }
                     }
                 }
 
+                // Center playback controls
                 Row(
                     modifier = Modifier.align(Alignment.Center),
                     horizontalArrangement = Arrangement.spacedBy(32.dp),
                     verticalAlignment = Alignment.CenterVertically
                 ) {
-                    IconButton(
-                        onClick = { exoPlayer.seekTo(exoPlayer.currentPosition - 10_000) },
-                        modifier = Modifier.size(56.dp)
+                    // Skip back
+                    Box(
+                        modifier = Modifier
+                            .size(56.dp)
+                            .clip(CircleShape)
+                            .background(Color(0x44000000))
+                            .border(0.5.dp, Color.White.copy(alpha = 0.1f), CircleShape)
+                            .clickable {
+                                exoPlayer.seekTo((exoPlayer.currentPosition - 10_000).coerceAtLeast(0))
+                                showSkipLeft = true
+                            },
+                        contentAlignment = Alignment.Center
                     ) {
-                        Icon(Icons.Default.Replay10, contentDescription = "-10s", tint = TextPrimary, modifier = Modifier.size(36.dp))
+                        Icon(
+                            Icons.Default.Replay10,
+                            contentDescription = "-10s",
+                            tint = TextPrimary,
+                            modifier = Modifier.size(28.dp)
+                        )
                     }
-                    IconButton(
-                        onClick = { if (exoPlayer.isPlaying) exoPlayer.pause() else exoPlayer.play() },
-                        modifier = Modifier.size(72.dp).clip(CircleShape).background(Color(0x55000000))
+
+                    // Play/Pause - larger premium button
+                    Box(
+                        modifier = Modifier
+                            .size(72.dp)
+                            .clip(CircleShape)
+                            .background(
+                                Brush.linearGradient(
+                                    listOf(AccentRed, Color(0xFFB71C1C))
+                                )
+                            )
+                            .border(1.dp, Color.White.copy(alpha = 0.2f), CircleShape)
+                            .clickable {
+                                if (exoPlayer.isPlaying) exoPlayer.pause() else exoPlayer.play()
+                            },
+                        contentAlignment = Alignment.Center
                     ) {
                         Icon(
                             if (exoPlayer.isPlaying) Icons.Default.Pause else Icons.Default.PlayArrow,
                             contentDescription = "Play/Pause",
                             tint = TextPrimary,
-                            modifier = Modifier.size(48.dp)
+                            modifier = Modifier.size(36.dp)
                         )
                     }
-                    IconButton(
-                        onClick = { exoPlayer.seekTo(exoPlayer.currentPosition + 10_000) },
-                        modifier = Modifier.size(56.dp)
+
+                    // Skip forward
+                    Box(
+                        modifier = Modifier
+                            .size(56.dp)
+                            .clip(CircleShape)
+                            .background(Color(0x44000000))
+                            .border(0.5.dp, Color.White.copy(alpha = 0.1f), CircleShape)
+                            .clickable {
+                                exoPlayer.seekTo(exoPlayer.currentPosition + 10_000)
+                                showSkipRight = true
+                            },
+                        contentAlignment = Alignment.Center
                     ) {
-                        Icon(Icons.Default.Forward10, contentDescription = "+10s", tint = TextPrimary, modifier = Modifier.size(36.dp))
+                        Icon(
+                            Icons.Default.Forward10,
+                            contentDescription = "+10s",
+                            tint = TextPrimary,
+                            modifier = Modifier.size(28.dp)
+                        )
                     }
                 }
 
+                // Bottom controls
                 Column(
                     modifier = Modifier
                         .align(Alignment.BottomCenter)
                         .fillMaxWidth()
-                        .padding(horizontal = 16.dp)
                         .navigationBarsPadding()
-                        .padding(bottom = 16.dp)
+                        .padding(horizontal = 20.dp, vertical = 20.dp),
+                    verticalArrangement = Arrangement.spacedBy(4.dp)
                 ) {
                     Row(
                         modifier = Modifier.fillMaxWidth(),
                         horizontalArrangement = Arrangement.SpaceBetween
                     ) {
-                        Text(state.currentPositionMs.toProgressString(), color = TextSecondary, fontSize = 12.sp)
-                        Text(state.durationMs.toProgressString(), color = TextSecondary, fontSize = 12.sp)
+                        Text(
+                            state.currentPositionMs.toProgressString(),
+                            color = TextSecondary,
+                            fontSize = 12.sp,
+                            fontWeight = FontWeight.Medium
+                        )
+                        if (state.durationMs > 0) {
+                            Text(
+                                state.durationMs.toProgressString(),
+                                color = TextTertiary,
+                                fontSize = 12.sp
+                            )
+                        }
                     }
+
                     Slider(
-                        value = if (state.durationMs > 0) state.currentPositionMs.toFloat() / state.durationMs.toFloat() else 0f,
+                        value = if (state.durationMs > 0)
+                            (state.currentPositionMs.toFloat() / state.durationMs.toFloat()).coerceIn(0f, 1f)
+                        else 0f,
                         onValueChange = { fraction ->
                             exoPlayer.seekTo((fraction * state.durationMs).toLong())
                         },
+                        modifier = Modifier.fillMaxWidth(),
                         colors = SliderDefaults.colors(
                             thumbColor = AccentRed,
                             activeTrackColor = AccentRed,
-                            inactiveTrackColor = TextDisabled
-                        )
+                            inactiveTrackColor = Color.White.copy(alpha = 0.2f),
+                            activeTickColor = Color.Transparent,
+                            inactiveTickColor = Color.Transparent
+                        ),
+                        thumb = {
+                            Box(
+                                modifier = Modifier
+                                    .size(16.dp)
+                                    .clip(CircleShape)
+                                    .background(AccentRed)
+                                    .border(2.dp, Color.White, CircleShape)
+                            )
+                        }
                     )
+
+                    // Bottom action row
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.SpaceBetween,
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        // Speed selector
+                        Row(
+                            horizontalArrangement = Arrangement.spacedBy(6.dp),
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            listOf(0.5f, 1.0f, 1.5f, 2.0f).forEach { speed ->
+                                val selected = state.playbackSpeed == speed
+                                Box(
+                                    modifier = Modifier
+                                        .clip(RoundedCornerShape(8.dp))
+                                        .background(
+                                            if (selected) AccentRed else Color.White.copy(alpha = 0.08f)
+                                        )
+                                        .border(
+                                            0.5.dp,
+                                            if (selected) AccentRed else Color.White.copy(alpha = 0.15f),
+                                            RoundedCornerShape(8.dp)
+                                        )
+                                        .clickable {
+                                            exoPlayer.setPlaybackSpeed(speed)
+                                            viewModel.setPlaybackSpeed(speed)
+                                        }
+                                        .padding(horizontal = 9.dp, vertical = 5.dp),
+                                    contentAlignment = Alignment.Center
+                                ) {
+                                    Text(
+                                        "${speed}x",
+                                        color = if (selected) TextPrimary else TextTertiary,
+                                        fontSize = 11.sp,
+                                        fontWeight = if (selected) FontWeight.Bold else FontWeight.Normal
+                                    )
+                                }
+                            }
+                        }
+
+                        // PiP button
+                        Box(
+                            modifier = Modifier
+                                .clip(RoundedCornerShape(8.dp))
+                                .background(Color.White.copy(alpha = 0.08f))
+                                .border(0.5.dp, Color.White.copy(alpha = 0.15f), RoundedCornerShape(8.dp))
+                                .padding(horizontal = 10.dp, vertical = 5.dp),
+                            contentAlignment = Alignment.Center
+                        ) {
+                            Text("⊡ PiP", color = TextTertiary, fontSize = 11.sp)
+                        }
+                    }
                 }
             }
         }
 
+        // Lock indicator
         if (state.isLocked) {
             Box(
                 modifier = Modifier
@@ -255,14 +446,29 @@ fun PlayerScreen(
                     .statusBarsPadding()
                     .padding(16.dp)
             ) {
-                IconButton(
-                    onClick = viewModel::toggleLock,
+                Box(
                     modifier = Modifier
-                        .size(40.dp)
-                        .clip(CircleShape)
-                        .background(Color(0x88000000))
+                        .clip(RoundedCornerShape(12.dp))
+                        .background(
+                            Brush.linearGradient(listOf(AccentRed, Color(0xFFB71C1C)))
+                        )
+                        .border(0.5.dp, Color.White.copy(alpha = 0.2f), RoundedCornerShape(12.dp))
+                        .clickable { viewModel.toggleLock() }
+                        .padding(horizontal = 14.dp, vertical = 8.dp),
+                    contentAlignment = Alignment.Center
                 ) {
-                    Icon(Icons.Default.LockOpen, contentDescription = "Unlock", tint = AccentRed)
+                    Row(
+                        horizontalArrangement = Arrangement.spacedBy(6.dp),
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Icon(
+                            Icons.Default.LockOpen,
+                            contentDescription = "Unlock",
+                            tint = TextPrimary,
+                            modifier = Modifier.size(16.dp)
+                        )
+                        Text("Unlock", color = TextPrimary, fontSize = 12.sp, fontWeight = FontWeight.SemiBold)
+                    }
                 }
             }
         }

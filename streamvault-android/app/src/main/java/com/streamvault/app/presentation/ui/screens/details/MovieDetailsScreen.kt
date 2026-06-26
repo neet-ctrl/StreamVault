@@ -1,6 +1,7 @@
 package com.streamvault.app.presentation.ui.screens.details
 
 import androidx.compose.foundation.background
+import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
@@ -9,9 +10,7 @@ import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.ArrowBack
-import androidx.compose.material.icons.filled.Favorite
-import androidx.compose.material.icons.filled.FavoriteBorder
+import androidx.compose.material.icons.filled.*
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -26,9 +25,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
 import coil.compose.AsyncImage
-import com.streamvault.app.domain.model.MediaType
-import com.streamvault.app.presentation.ui.components.RatingBadge
-import com.streamvault.app.presentation.ui.components.SectionHeader
+import com.streamvault.app.presentation.ui.components.*
 import com.streamvault.app.presentation.ui.theme.*
 import com.streamvault.app.presentation.viewmodel.DetailsViewModel
 import com.streamvault.app.util.toRuntimeString
@@ -51,8 +48,30 @@ fun MovieDetailsScreen(
     }
 
     if (state.isLoading) {
+        Box(Modifier.fillMaxSize().background(AmoledBlack)) {
+            ShimmerDetailScreen()
+        }
+        return
+    }
+
+    if (state.error != null) {
         Box(Modifier.fillMaxSize().background(AmoledBlack), contentAlignment = Alignment.Center) {
-            CircularProgressIndicator(color = AccentRed)
+            Column(
+                horizontalAlignment = Alignment.CenterHorizontally,
+                verticalArrangement = Arrangement.spacedBy(12.dp)
+            ) {
+                Text("💔", fontSize = 48.sp)
+                Text("Failed to load", color = TextSecondary)
+                Box(
+                    modifier = Modifier
+                        .clip(RoundedCornerShape(10.dp))
+                        .background(AccentRed)
+                        .clickable { onBack() }
+                        .padding(horizontal = 20.dp, vertical = 10.dp)
+                ) {
+                    Text("Go Back", color = TextPrimary, fontWeight = FontWeight.Bold)
+                }
+            }
         }
         return
     }
@@ -65,157 +84,280 @@ fun MovieDetailsScreen(
     val genres = state.movieDetails?.movie?.genres ?: state.tvDetails?.tvShow?.genres ?: emptyList()
     val runtime = state.movieDetails?.movie?.runtime
     val releaseDate = state.movieDetails?.movie?.releaseDate ?: state.tvDetails?.tvShow?.firstAirDate ?: ""
+    val tagline = state.movieDetails?.movie?.tagline
     val imdbId = state.movieDetails?.movie?.imdbId ?: state.tvDetails?.tvShow?.imdbId
     val cast = state.movieDetails?.cast ?: state.tvDetails?.cast ?: emptyList()
     val similar = state.movieDetails?.similar ?: emptyList()
 
     Box(modifier = Modifier.fillMaxSize().background(AmoledBlack)) {
-        LazyColumn(contentPadding = PaddingValues(bottom = 80.dp)) {
+        LazyColumn(contentPadding = PaddingValues(bottom = 96.dp)) {
+
+            // Backdrop hero
             item {
-                Box(modifier = Modifier.fillMaxWidth().height(380.dp)) {
+                Box(modifier = Modifier.fillMaxWidth().height(400.dp)) {
                     AsyncImage(
                         model = backdrop?.toTmdbImageUrl("w1280"),
                         contentDescription = title,
                         contentScale = ContentScale.Crop,
                         modifier = Modifier.fillMaxSize()
                     )
+                    // Cinematic gradient
                     Box(
-                        modifier = Modifier.fillMaxSize().background(
-                            Brush.verticalGradient(
-                                colors = listOf(Color.Transparent, AmoledBlack),
-                                startY = 150f
+                        modifier = Modifier
+                            .fillMaxSize()
+                            .background(
+                                Brush.verticalGradient(
+                                    colorStops = arrayOf(
+                                        0.0f to Color(0x33000000),
+                                        0.5f to Color(0x66000000),
+                                        1.0f to AmoledBlack
+                                    )
+                                )
                             )
-                        )
                     )
+                    // Back & favorite buttons
                     Row(
                         modifier = Modifier
                             .fillMaxWidth()
                             .statusBarsPadding()
-                            .padding(16.dp),
+                            .padding(horizontal = 16.dp, vertical = 12.dp),
                         horizontalArrangement = Arrangement.SpaceBetween
                     ) {
-                        IconButton(
-                            onClick = onBack,
+                        Box(
                             modifier = Modifier
-                                .size(40.dp)
+                                .size(42.dp)
                                 .clip(CircleShape)
                                 .background(Color(0x88000000))
+                                .border(0.5.dp, Color.White.copy(alpha = 0.15f), CircleShape)
+                                .clickable { onBack() },
+                            contentAlignment = Alignment.Center
                         ) {
-                            Icon(Icons.Default.ArrowBack, contentDescription = "Back", tint = TextPrimary)
+                            Icon(Icons.Default.ArrowBack, null, tint = TextPrimary, modifier = Modifier.size(20.dp))
                         }
-                        IconButton(
-                            onClick = viewModel::toggleFavorite,
+                        Box(
                             modifier = Modifier
-                                .size(40.dp)
+                                .size(42.dp)
                                 .clip(CircleShape)
                                 .background(Color(0x88000000))
+                                .border(
+                                    0.5.dp,
+                                    if (state.isFavorite) AccentRed.copy(alpha = 0.5f) else Color.White.copy(alpha = 0.15f),
+                                    CircleShape
+                                )
+                                .clickable { viewModel.toggleFavorite() },
+                            contentAlignment = Alignment.Center
                         ) {
                             Icon(
                                 if (state.isFavorite) Icons.Default.Favorite else Icons.Default.FavoriteBorder,
-                                contentDescription = "Favorite",
-                                tint = if (state.isFavorite) AccentRed else TextPrimary
+                                null,
+                                tint = if (state.isFavorite) AccentRed else TextPrimary,
+                                modifier = Modifier.size(20.dp)
                             )
                         }
                     }
                 }
             }
 
+            // Info row
             item {
                 Row(
                     modifier = Modifier
                         .fillMaxWidth()
-                        .padding(16.dp),
-                    horizontalArrangement = Arrangement.spacedBy(16.dp)
+                        .padding(horizontal = 16.dp, vertical = 4.dp)
+                        .offset(y = (-20).dp),
+                    horizontalArrangement = Arrangement.spacedBy(16.dp),
+                    verticalAlignment = Alignment.Bottom
                 ) {
-                    AsyncImage(
-                        model = poster?.toTmdbImageUrl("w342"),
-                        contentDescription = title,
-                        contentScale = ContentScale.Crop,
+                    // Poster with shadow
+                    Box(
                         modifier = Modifier
-                            .width(110.dp)
-                            .height(165.dp)
-                            .clip(RoundedCornerShape(12.dp))
+                            .width(115.dp)
+                            .height(172.dp)
+                            .clip(RoundedCornerShape(14.dp))
                             .background(BlackCard)
-                    )
-                    Column(
-                        verticalArrangement = Arrangement.spacedBy(8.dp),
-                        modifier = Modifier.weight(1f)
+                            .border(1.dp, Color.White.copy(alpha = 0.1f), RoundedCornerShape(14.dp))
                     ) {
-                        Text(title, color = TextPrimary, fontSize = 22.sp, fontWeight = FontWeight.Bold)
-                        Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                        AsyncImage(
+                            model = poster?.toTmdbImageUrl("w342"),
+                            contentDescription = title,
+                            contentScale = ContentScale.Crop,
+                            modifier = Modifier.fillMaxSize()
+                        )
+                    }
+
+                    Column(
+                        modifier = Modifier.weight(1f),
+                        verticalArrangement = Arrangement.spacedBy(8.dp)
+                    ) {
+                        Text(
+                            title,
+                            color = TextPrimary,
+                            fontSize = 22.sp,
+                            fontWeight = FontWeight.ExtraBold,
+                            lineHeight = 28.sp
+                        )
+                        if (!tagline.isNullOrBlank()) {
+                            Text(
+                                "\"$tagline\"",
+                                color = AccentRed.copy(alpha = 0.8f),
+                                fontSize = 12.sp,
+                                fontStyle = androidx.compose.ui.text.font.FontStyle.Italic
+                            )
+                        }
+                        Row(horizontalArrangement = Arrangement.spacedBy(8.dp), verticalAlignment = Alignment.CenterVertically) {
                             RatingBadge(rating)
                             if (runtime != null) {
-                                Text(runtime.toRuntimeString(), color = TextTertiary, fontSize = 13.sp)
+                                Box(
+                                    modifier = Modifier
+                                        .clip(RoundedCornerShape(6.dp))
+                                        .background(BlackElevated)
+                                        .padding(horizontal = 8.dp, vertical = 4.dp)
+                                ) {
+                                    Text(runtime.toRuntimeString(), color = TextTertiary, fontSize = 12.sp)
+                                }
                             }
                         }
                         if (releaseDate.length >= 4) {
-                            Text(releaseDate.take(4), color = TextTertiary, fontSize = 13.sp)
+                            Text(releaseDate.take(4), color = TextTertiary, fontSize = 13.sp, fontWeight = FontWeight.Medium)
                         }
                         if (genres.isNotEmpty()) {
-                            Text(
-                                genres.take(3).joinToString(" • "),
-                                color = TextTertiary,
-                                fontSize = 12.sp
-                            )
-                        }
-                        Row(horizontalArrangement = Arrangement.spacedBy(10.dp)) {
-                            Button(
-                                onClick = {
-                                    imdbId?.let { onStreamClick(it) }
-                                },
-                                colors = ButtonDefaults.buttonColors(containerColor = AccentRed),
-                                enabled = imdbId != null
-                            ) { Text("▶  Play") }
+                            Row(horizontalArrangement = Arrangement.spacedBy(6.dp)) {
+                                genres.take(2).forEach { genre ->
+                                    Box(
+                                        modifier = Modifier
+                                            .clip(RoundedCornerShape(20.dp))
+                                            .background(AccentRed.copy(alpha = 0.1f))
+                                            .border(0.5.dp, AccentRed.copy(alpha = 0.3f), RoundedCornerShape(20.dp))
+                                            .padding(horizontal = 10.dp, vertical = 4.dp)
+                                    ) {
+                                        Text(genre, color = AccentRed.copy(alpha = 0.9f), fontSize = 11.sp, fontWeight = FontWeight.Medium)
+                                    }
+                                }
+                            }
                         }
                     }
                 }
             }
 
+            // Play & Add buttons
+            item {
+                Row(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(horizontal = 16.dp, vertical = 4.dp),
+                    horizontalArrangement = Arrangement.spacedBy(12.dp)
+                ) {
+                    Box(
+                        modifier = Modifier
+                            .weight(1f)
+                            .clip(RoundedCornerShape(14.dp))
+                            .background(
+                                if (imdbId != null)
+                                    Brush.linearGradient(listOf(AccentRed, Color(0xFFB71C1C)))
+                                else
+                                    Brush.linearGradient(listOf(BlackElevated, BlackElevated))
+                            )
+                            .clickable(enabled = imdbId != null) {
+                                imdbId?.let { onStreamClick(it) }
+                            }
+                            .padding(vertical = 14.dp),
+                        contentAlignment = Alignment.Center
+                    ) {
+                        Row(
+                            horizontalArrangement = Arrangement.spacedBy(8.dp),
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            Icon(Icons.Default.PlayArrow, null, tint = TextPrimary, modifier = Modifier.size(20.dp))
+                            Text("Play Now", color = TextPrimary, fontWeight = FontWeight.Bold, fontSize = 15.sp)
+                        }
+                    }
+
+                    Box(
+                        modifier = Modifier
+                            .clip(RoundedCornerShape(14.dp))
+                            .background(BlackCard)
+                            .border(1.dp, BlackBorder, RoundedCornerShape(14.dp))
+                            .clickable { viewModel.toggleFavorite() }
+                            .padding(horizontal = 18.dp, vertical = 14.dp),
+                        contentAlignment = Alignment.Center
+                    ) {
+                        Icon(
+                            if (state.isFavorite) Icons.Default.Bookmark else Icons.Default.BookmarkBorder,
+                            null,
+                            tint = if (state.isFavorite) AccentRed else TextSecondary,
+                            modifier = Modifier.size(20.dp)
+                        )
+                    }
+                }
+            }
+
+            // Overview
             if (overview.isNotBlank()) {
                 item {
-                    Column(modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp)) {
-                        Text("Overview", color = TextPrimary, fontSize = 16.sp, fontWeight = FontWeight.Bold)
-                        Spacer(Modifier.height(6.dp))
+                    Column(
+                        modifier = Modifier
+                            .padding(horizontal = 16.dp, vertical = 12.dp)
+                            .clip(RoundedCornerShape(16.dp))
+                            .background(BlackCard)
+                            .border(0.5.dp, BlackBorder, RoundedCornerShape(16.dp))
+                            .padding(16.dp)
+                    ) {
+                        Text(
+                            "Synopsis",
+                            color = TextPrimary,
+                            fontSize = 14.sp,
+                            fontWeight = FontWeight.Bold,
+                            modifier = Modifier.padding(bottom = 8.dp)
+                        )
                         Text(overview, color = TextSecondary, fontSize = 14.sp, lineHeight = 22.sp)
                     }
                 }
             }
 
+            // Cast
             if (cast.isNotEmpty()) {
                 item { SectionHeader("Cast") }
                 item {
                     LazyRow(
                         contentPadding = PaddingValues(horizontal = 16.dp),
-                        horizontalArrangement = Arrangement.spacedBy(12.dp)
+                        horizontalArrangement = Arrangement.spacedBy(14.dp)
                     ) {
                         items(cast) { member ->
                             Column(
                                 horizontalAlignment = Alignment.CenterHorizontally,
-                                modifier = Modifier.width(80.dp)
+                                modifier = Modifier.width(72.dp)
                             ) {
-                                AsyncImage(
-                                    model = member.profilePath?.toTmdbImageUrl("w185"),
-                                    contentDescription = member.name,
-                                    contentScale = ContentScale.Crop,
+                                Box(
                                     modifier = Modifier
-                                        .size(70.dp)
+                                        .size(66.dp)
                                         .clip(CircleShape)
                                         .background(BlackCard)
-                                )
-                                Spacer(Modifier.height(4.dp))
+                                        .border(1.dp, BlackBorder, CircleShape)
+                                ) {
+                                    AsyncImage(
+                                        model = member.profilePath?.toTmdbImageUrl("w185"),
+                                        contentDescription = member.name,
+                                        contentScale = ContentScale.Crop,
+                                        modifier = Modifier.fillMaxSize()
+                                    )
+                                }
+                                Spacer(Modifier.height(6.dp))
                                 Text(
                                     member.name,
                                     color = TextSecondary,
-                                    fontSize = 11.sp,
+                                    fontSize = 10.sp,
+                                    fontWeight = FontWeight.Medium,
                                     maxLines = 2,
-                                    overflow = TextOverflow.Ellipsis
+                                    overflow = TextOverflow.Ellipsis,
+                                    modifier = Modifier.width(72.dp)
                                 )
                                 Text(
                                     member.character,
                                     color = TextTertiary,
-                                    fontSize = 10.sp,
+                                    fontSize = 9.sp,
                                     maxLines = 1,
-                                    overflow = TextOverflow.Ellipsis
+                                    overflow = TextOverflow.Ellipsis,
+                                    modifier = Modifier.width(72.dp)
                                 )
                             }
                         }
@@ -223,15 +365,16 @@ fun MovieDetailsScreen(
                 }
             }
 
+            // Similar
             if (similar.isNotEmpty()) {
-                item { SectionHeader("Similar") }
+                item { SectionHeader("More Like This") }
                 item {
                     LazyRow(
                         contentPadding = PaddingValues(horizontal = 16.dp, vertical = 4.dp),
                         horizontalArrangement = Arrangement.spacedBy(12.dp)
                     ) {
                         items(similar) { movie ->
-                            com.streamvault.app.presentation.ui.components.MovieCard(
+                            MovieCard(
                                 movie = movie,
                                 onClick = { onSimilarClick(movie.id, isTv) }
                             )
