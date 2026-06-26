@@ -1,0 +1,126 @@
+name: StreamVault – Debug APK
+
+on:
+  push:
+    branches: [ main, master, develop ]
+  pull_request:
+    branches: [ main, master ]
+  workflow_dispatch:
+
+env:
+  JAVA_VERSION: '17'
+  GRADLE_VERSION: '8.4'
+  PROJECT_DIR: streamvault-android
+
+jobs:
+  build-debug:
+    name: Build & Pre-Release Debug APK
+    runs-on: ubuntu-latest
+
+    steps:
+      # ── Checkout ──────────────────────────────────────────────────────────
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0          # full history so we can tag
+
+      # ── Java ──────────────────────────────────────────────────────────────
+      - name: Set up JDK 17
+        uses: actions/setup-java@v4
+        with:
+          java-version: ${{ env.JAVA_VERSION }}
+          distribution: temurin
+          cache: gradle
+
+      # ── Android SDK ───────────────────────────────────────────────────────
+      - name: Set up Android SDK
+        uses: android-actions/setup-android@v3
+
+      # ── Gradle wrapper ────────────────────────────────────────────────────
+      - name: Generate Gradle wrapper
+        working-directory: ${{ env.PROJECT_DIR }}
+        run: |
+          set -e
+          mkdir -p gradle/wrapper
+
+          # Download the wrapper JAR directly from the Gradle CDN
+          curl -fsSL \
+            "https://services.gradle.org/distributions/gradle-${GRADLE_VERSION}-bin.zip" \
+            -o /tmp/gradle.zip
+          unzip -q /tmp/gradle.zip -d /tmp/gradle-dist
+          /tmp/gradle-dist/gradle-${GRADLE_VERSION}/bin/gradle wrapper \
+            --gradle-version="${GRADLE_VERSION}" \
+            --distribution-type=bin
+
+          chmod +x gradlew
+
+      # ── Gradle cache ──────────────────────────────────────────────────────
+      - name: Cache Gradle
+        uses: actions/cache@v4
+        with:
+          path: |
+            ~/.gradle/caches
+            ~/.gradle/wrapper
+            ~/.android/build-cache
+          key: ${{ runner.os }}-gradle-${{ hashFiles('**/*.gradle*', '**/gradle-wrapper.properties') }}
+          restore-keys: ${{ runner.os }}-gradle-
+
+      # ── Build ─────────────────────────────────────────────────────────────
+      - name: Build Debug APK
+        working-directory: ${{ env.PROJECT_DIR }}
+        env:
+          TMDB_API_KEY: ${{ secrets.TMDB_API_KEY }}
+        run: ./gradlew assembleDebug --stacktrace --no-daemon
+
+      # ── Rename APK with short SHA ─────────────────────────────────────────
+      - name: Rename APK
+        run: |
+          SHA="${GITHUB_SHA::7}"
+          SRC="${{ env.PROJECT_DIR }}/app/build/outputs/apk/debug/app-debug.apk"
+          DEST="${{ env.PROJECT_DIR }}/app/build/outputs/apk/debug/StreamVault-debug-${SHA}.apk"
+          mv "$SRC" "$DEST"
+          echo "APK_PATH=$DEST" >> $GITHUB_ENV
+          echo "APK_NAME=StreamVault-debug-${SHA}.apk" >> $GITHUB_ENV
+
+      # ── Upload artifact (always available in Actions UI) ──────────────────
+      - name: Upload Debug APK artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: ${{ env.APK_NAME }}
+          path: ${{ env.APK_PATH }}
+          retention-days: 30
+
+      # ── Auto-tag & GitHub pre-release (push to main/master only) ─────────
+      - name: Create pre-release tag and GitHub release
+        if: github.event_name == 'push' && (github.ref == 'refs/heads/main' || github.ref == 'refs/heads/master')
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          SHA="${GITHUB_SHA::7}"
+          TAG="debug-${SHA}"
+          DATE=$(date -u +"%Y-%m-%d %H:%M UTC")
+          BRANCH="${GITHUB_REF_NAME}"
+
+          # Create an annotated tag
+          git config user.name  "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git tag -a "$TAG" -m "Debug build $SHA on $BRANCH ($DATE)"
+          git push origin "$TAG"
+
+          # Publish a pre-release tied to that tag
+          gh release create "$TAG" \
+            "${{ env.APK_PATH }}" \
+            --title "Debug build · $SHA · $DATE" \
+            --notes "$(cat <<'EOF'
+          ### StreamVault – Debug APK
+
+          | | |
+          |---|---|
+          | **Commit** | \`${{ github.sha }}\` |
+          | **Branch** | \`${BRANCH}\` |
+          | **Built**  | ${DATE} |
+
+          > ⚠️ This is an automated **pre-release** debug build. Do not use in production.
+          EOF
+          )" \
+            --prerelease
