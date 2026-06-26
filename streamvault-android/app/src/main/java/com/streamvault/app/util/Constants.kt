@@ -7,6 +7,7 @@ object Constants {
     const val TMDB_IMAGE_W780 = "https://image.tmdb.org/t/p/w780"
     const val TMDB_IMAGE_ORIGINAL = "https://image.tmdb.org/t/p/original"
     const val TMDB_IMAGE_W185 = "https://image.tmdb.org/t/p/w185"
+    const val TMDB_IMAGE_W342 = "https://image.tmdb.org/t/p/w342"
 
     // Stremio Addons
     const val TORRENTIO_URL = "https://torrentio.strem.fun"
@@ -25,7 +26,7 @@ object Constants {
 
     // Room Database
     const val DATABASE_NAME = "streamvault.db"
-    const val DATABASE_VERSION = 1
+    const val DATABASE_VERSION = 2
 
     // Download
     const val DOWNLOAD_DIR = "Movies/StreamVault"
@@ -43,6 +44,11 @@ object Constants {
     const val PREF_SUBTITLE_SIZE = "subtitle_size"
     const val PREF_DOWNLOAD_PATH = "download_path"
     const val PREF_ACTIVE_ADDONS = "active_addons"
+    const val PREF_HARDWARE_ACCEL = "hardware_acceleration"
+    const val PREF_EXTERNAL_PLAYER = "external_player"
+    const val PREF_PRE_BUFFER_MB = "pre_buffer_size_mb"
+    const val PREF_MAX_CONNECTIONS = "max_connections"
+    const val PREF_TORRENT_TIMEOUT = "torrent_timeout_seconds"
 
     // Default priorities
     val ENGLISH_ADDON_PRIORITY = listOf("torrentio", "knightcrawler", "jackettio", "comet")
@@ -56,5 +62,26 @@ object Constants {
     // Player
     const val SKIP_FORWARD_MS = 10_000L
     const val SKIP_BACK_MS = 10_000L
-    const val HIDE_CONTROLS_DELAY_MS = 3_000L
+    const val HIDE_CONTROLS_DELAY_MS = 4_000L
+    const val DOUBLE_TAP_SEEK_MS = 10_000L
+    const val PROGRESS_SAVE_INTERVAL_MS = 5_000L
+
+    // Stream retry
+    const val STREAM_RETRY_COUNT = 3
+    const val STREAM_RETRY_DELAY_MS = 1_000L
+
+    // Torrent
+    const val DEFAULT_PRE_BUFFER_MB = 10
+    const val DEFAULT_MAX_CONNECTIONS = 200
+    const val DEFAULT_TORRENT_TIMEOUT_S = 30
+    const val MAX_TORRENT_CONNECTIONS = 500
+
+    // Cache expiry
+    const val CACHE_EXPIRY_MS = 24 * 60 * 60 * 1000L  // 24 hours
+
+    // Quality options
+    val QUALITY_OPTIONS = listOf("4K", "1080p", "720p", "480p", "Best Available")
+
+    // Playback speed options
+    val SPEED_OPTIONS = listOf(0.25f, 0.5f, 0.75f, 1.0f, 1.25f, 1.5f, 1.75f, 2.0f)
 }

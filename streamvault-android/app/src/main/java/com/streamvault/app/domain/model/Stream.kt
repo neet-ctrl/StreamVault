@@ -13,14 +13,29 @@ data class Stream(
     val provider: String,
     val addonId: String,
     val isTorrent: Boolean = false,
+    val language: String? = null,
     val subtitles: List<Subtitle> = emptyList(),
-    val behaviorHints: BehaviorHints? = null
+    val behaviorHints: BehaviorHints? = null,
+    val cached: Boolean = false
 )
 
 data class Subtitle(
     val id: String,
     val lang: String,
-    val url: String
+    val langCode: String = "",
+    val url: String,
+    val isExternal: Boolean = false,
+    val delayMs: Long = 0L
+)
+
+data class SubtitleSearchResult(
+    val id: String,
+    val title: String,
+    val lang: String,
+    val langCode: String,
+    val url: String,
+    val downloadCount: Int = 0,
+    val rating: Double = 0.0
 )
 
 data class BehaviorHints(
@@ -49,4 +64,31 @@ sealed class StreamResult {
 
 enum class AddonType {
     TORRENTIO, MEDIAFUSION, KNIGHTCRAWLER, JACKETTIO, COMET, CINEMETA, CUSTOM
+}
+
+data class AudioTrack(
+    val id: Int,
+    val label: String,
+    val language: String,
+    val isSelected: Boolean = false
+)
+
+data class TorrentStatus(
+    val infoHash: String,
+    val name: String?,
+    val progress: Float = 0f,
+    val downloadSpeedBps: Long = 0L,
+    val uploadSpeedBps: Long = 0L,
+    val seeds: Int = 0,
+    val peers: Int = 0,
+    val totalSize: Long = 0L,
+    val downloadedSize: Long = 0L,
+    val etaSeconds: Long = 0L,
+    val isStreaming: Boolean = false,
+    val streamPort: Int = 0,
+    val state: TorrentState = TorrentState.CHECKING
+)
+
+enum class TorrentState {
+    CHECKING, DOWNLOADING, SEEDING, FINISHED, ERROR, STOPPED, PREBUFFERING
 }

@@ -13,8 +13,12 @@ import javax.inject.Singleton
 class LocalRepositoryImpl @Inject constructor(
     private val historyDao: HistoryDao,
     private val favoriteDao: FavoriteDao,
-    private val downloadDao: DownloadDao
+    private val downloadDao: DownloadDao,
+    private val playbackPositionDao: PlaybackPositionDao,
+    private val subtitlePreferenceDao: SubtitlePreferenceDao
 ) : LocalRepository {
+
+    // ────────────────────── History ──────────────────────
 
     override fun getWatchHistory(): Flow<List<WatchHistory>> =
         historyDao.getAllHistory().map { list ->
@@ -54,7 +58,13 @@ class LocalRepositoryImpl @Inject constructor(
     override suspend fun updateProgress(movieId: Int, progressMs: Long, durationMs: Long) {
         val existing = historyDao.getHistoryForMovie(movieId)
         if (existing != null) {
-            historyDao.insertHistory(existing.copy(progressMs = progressMs, durationMs = durationMs, watchedAt = System.currentTimeMillis()))
+            historyDao.insertHistory(
+                existing.copy(
+                    progressMs = progressMs,
+                    durationMs = durationMs,
+                    watchedAt = System.currentTimeMillis()
+                )
+            )
         }
     }
 
@@ -78,6 +88,8 @@ class LocalRepositoryImpl @Inject constructor(
                 durationMs = entity.durationMs
             )
         }
+
+    // ────────────────────── Favorites ──────────────────────
 
     override fun getFavorites(): Flow<List<Favorite>> =
         favoriteDao.getAllFavorites().map { list ->
@@ -112,6 +124,8 @@ class LocalRepositoryImpl @Inject constructor(
 
     override suspend fun removeFavorite(movieId: Int) = favoriteDao.deleteFavorite(movieId)
 
+    // ────────────────────── Downloads ──────────────────────
+
     override fun getDownloads(): Flow<List<Download>> =
         downloadDao.getAllDownloads().map { list ->
             list.map { entity ->
@@ -128,7 +142,11 @@ class LocalRepositoryImpl @Inject constructor(
                     createdAt = entity.createdAt,
                     completedAt = entity.completedAt,
                     infoHash = entity.infoHash,
-                    fileIdx = entity.fileIdx
+                    fileIdx = entity.fileIdx,
+                    seedCount = entity.seedCount,
+                    peerCount = entity.peerCount,
+                    downloadSpeedBps = entity.downloadSpeedBps,
+                    etaSeconds = entity.etaSeconds
                 )
             }
         }
@@ -144,7 +162,9 @@ class LocalRepositoryImpl @Inject constructor(
                 filePath = entity.filePath,
                 totalSize = entity.totalSize,
                 downloadedSize = entity.downloadedSize,
-                status = DownloadStatus.valueOf(entity.status)
+                status = DownloadStatus.valueOf(entity.status),
+                infoHash = entity.infoHash,
+                fileIdx = entity.fileIdx
             )
         }
 
@@ -173,4 +193,91 @@ class LocalRepositoryImpl @Inject constructor(
     }
 
     override suspend fun deleteDownload(id: String) = downloadDao.deleteDownload(id)
+
+    // ────────────────────── Playback Positions ──────────────────────
+
+    override suspend fun savePlaybackPosition(position: PlaybackPosition) {
+        playbackPositionDao.insertOrUpdate(
+            PlaybackPositionEntity(
+                contentId = position.contentId,
+                movieId = position.movieId,
+                title = position.title,
+                posterPath = position.posterPath,
+                mediaType = position.mediaType,
+                positionMs = position.positionMs,
+                durationMs = position.durationMs,
+                season = position.season,
+                episode = position.episode,
+                updatedAt = System.currentTimeMillis()
+            )
+        )
+    }
+
+    override suspend fun getPlaybackPosition(contentId: String): PlaybackPosition? =
+        playbackPositionDao.getPosition(contentId)?.toModel()
+
+    override suspend fun getPlaybackPositionByMovieId(movieId: Int): PlaybackPosition? =
+        playbackPositionDao.getPositionByMovieId(movieId)?.toModel()
+
+    override fun getContinueWatching(limit: Int): Flow<List<PlaybackPosition>> =
+        playbackPositionDao.getContinueWatching(limit).map { list ->
+            list.map { it.toModel() }
+        }
+
+    override suspend fun deletePlaybackPosition(contentId: String) =
+        playbackPositionDao.deletePosition(contentId)
+
+    // ────────────────────── Subtitle Preferences ──────────────────────
+
+    override suspend fun getSubtitlePreferences(): SubtitlePreference =
+        subtitlePreferenceDao.getPreferences()?.toModel() ?: SubtitlePreference()
+
+    override fun getSubtitlePreferencesFlow(): Flow<SubtitlePreference?> =
+        subtitlePreferenceDao.getPreferencesFlow().map { it?.toModel() }
+
+    override suspend fun saveSubtitlePreferences(prefs: SubtitlePreference) {
+        subtitlePreferenceDao.savePreferences(
+            SubtitlePreferenceEntity(
+                language = prefs.language,
+                languageCode = prefs.languageCode,
+                sizeScale = prefs.sizeScale,
+                fontFamily = prefs.fontFamily,
+                textColor = prefs.textColor,
+                backgroundColor = prefs.backgroundColor,
+                boldEnabled = prefs.boldEnabled,
+                italicEnabled = prefs.italicEnabled,
+                outlineEnabled = prefs.outlineEnabled,
+                delayMs = prefs.delayMs
+            )
+        )
+    }
+
+    override suspend fun updateSubtitleDelay(delayMs: Long) =
+        subtitlePreferenceDao.updateDelay(delayMs)
 }
+
+private fun PlaybackPositionEntity.toModel() = PlaybackPosition(
+    contentId = contentId,
+    movieId = movieId,
+    title = title,
+    posterPath = posterPath,
+    mediaType = mediaType,
+    positionMs = positionMs,
+    durationMs = durationMs,
+    season = season,
+    episode = episode,
+    updatedAt = updatedAt
+)
+
+private fun SubtitlePreferenceEntity.toModel() = SubtitlePreference(
+    language = language,
+    languageCode = languageCode,
+    sizeScale = sizeScale,
+    fontFamily = fontFamily,
+    textColor = textColor,
+    backgroundColor = backgroundColor,
+    boldEnabled = boldEnabled,
+    italicEnabled = italicEnabled,
+    outlineEnabled = outlineEnabled,
+    delayMs = delayMs
+)

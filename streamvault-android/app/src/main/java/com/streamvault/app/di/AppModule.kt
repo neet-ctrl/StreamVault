@@ -80,32 +80,24 @@ object DatabaseModule {
             .fallbackToDestructiveMigration()
             .build()
 
-    @Provides
-    fun provideHistoryDao(db: AppDatabase): HistoryDao = db.historyDao()
-
-    @Provides
-    fun provideFavoriteDao(db: AppDatabase): FavoriteDao = db.favoriteDao()
-
-    @Provides
-    fun provideDownloadDao(db: AppDatabase): DownloadDao = db.downloadDao()
-
-    @Provides
-    fun provideCachedMovieDao(db: AppDatabase): CachedMovieDao = db.cachedMovieDao()
+    @Provides fun provideHistoryDao(db: AppDatabase): HistoryDao = db.historyDao()
+    @Provides fun provideFavoriteDao(db: AppDatabase): FavoriteDao = db.favoriteDao()
+    @Provides fun provideDownloadDao(db: AppDatabase): DownloadDao = db.downloadDao()
+    @Provides fun provideCachedMovieDao(db: AppDatabase): CachedMovieDao = db.cachedMovieDao()
+    @Provides fun providePlaybackPositionDao(db: AppDatabase): PlaybackPositionDao = db.playbackPositionDao()
+    @Provides fun provideSubtitlePreferenceDao(db: AppDatabase): SubtitlePreferenceDao = db.subtitlePreferenceDao()
 }
 
 @Module
 @InstallIn(SingletonComponent::class)
 abstract class RepositoryModule {
 
-    @Binds
-    @Singleton
+    @Binds @Singleton
     abstract fun bindTmdbRepository(impl: TmdbRepositoryImpl): TmdbRepository
 
-    @Binds
-    @Singleton
+    @Binds @Singleton
     abstract fun bindStreamRepository(impl: StreamRepositoryImpl): StreamRepository
 
-    @Binds
-    @Singleton
+    @Binds @Singleton
     abstract fun bindLocalRepository(impl: LocalRepositoryImpl): LocalRepository
 }

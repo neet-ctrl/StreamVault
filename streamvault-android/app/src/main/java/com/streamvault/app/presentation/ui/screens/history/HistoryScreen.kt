@@ -1,6 +1,7 @@
 package com.streamvault.app.presentation.ui.screens.history
 
 import androidx.compose.foundation.background
+import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
@@ -8,20 +9,24 @@ import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Delete
-import androidx.compose.material.icons.filled.DeleteSweep
+import androidx.compose.material.icons.filled.PlayArrow
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.Brush
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import coil.compose.AsyncImage
 import com.streamvault.app.domain.model.WatchHistory
 import com.streamvault.app.presentation.ui.theme.*
+import com.streamvault.app.util.toProgressString
 import com.streamvault.app.util.toTmdbImageUrl
 import java.text.SimpleDateFormat
 import java.util.*
@@ -33,43 +38,34 @@ fun HistoryContent(
     onRemove: (Int) -> Unit,
     onClearAll: () -> Unit
 ) {
-    var showConfirmDialog by remember { mutableStateOf(false) }
-
-    if (showConfirmDialog) {
-        AlertDialog(
-            onDismissRequest = { showConfirmDialog = false },
-            title = { Text("Clear History", color = TextPrimary) },
-            text = { Text("Clear all watch history?", color = TextSecondary) },
-            confirmButton = {
-                TextButton(onClick = {
-                    onClearAll()
-                    showConfirmDialog = false
-                }) { Text("Clear", color = ErrorRed) }
-            },
-            dismissButton = {
-                TextButton(onClick = { showConfirmDialog = false }) {
-                    Text("Cancel", color = TextSecondary)
-                }
-            },
-            containerColor = BlackCard
-        )
-    }
-
     if (history.isEmpty()) {
         Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
             Column(
                 horizontalAlignment = Alignment.CenterHorizontally,
-                verticalArrangement = Arrangement.spacedBy(8.dp)
+                verticalArrangement = Arrangement.spacedBy(16.dp),
+                modifier = Modifier.padding(32.dp)
             ) {
-                Text("📺", fontSize = 48.sp)
-                Text("No watch history", color = TextSecondary)
-                Text("Content you watch will appear here", color = TextTertiary, fontSize = 12.sp)
+                Text("🕐", fontSize = 64.sp)
+                Text(
+                    "No watch history",
+                    color = TextPrimary,
+                    fontSize = 20.sp,
+                    fontWeight = FontWeight.Bold
+                )
+                Text(
+                    "Movies and series you watch\nwill appear here",
+                    color = TextTertiary,
+                    fontSize = 14.sp,
+                    textAlign = TextAlign.Center,
+                    lineHeight = 22.sp
+                )
             }
         }
         return
     }
 
-    Column(Modifier.fillMaxSize()) {
+    Column {
+        // Header row with count + clear button
         Row(
             modifier = Modifier
                 .fillMaxWidth()
@@ -77,78 +73,172 @@ fun HistoryContent(
             horizontalArrangement = Arrangement.SpaceBetween,
             verticalAlignment = Alignment.CenterVertically
         ) {
-            Text("${history.size} titles", color = TextTertiary, fontSize = 12.sp)
-            IconButton(onClick = { showConfirmDialog = true }) {
-                Icon(Icons.Default.DeleteSweep, contentDescription = "Clear All", tint = ErrorRed)
+            Text("${history.size} items", color = TextTertiary, fontSize = 12.sp)
+            var showConfirm by remember { mutableStateOf(false) }
+            TextButton(onClick = { showConfirm = true }) {
+                Text("Clear All", color = ErrorRed.copy(alpha = 0.8f), fontSize = 12.sp)
+            }
+            if (showConfirm) {
+                AlertDialog(
+                    onDismissRequest = { showConfirm = false },
+                    containerColor = BlackCard,
+                    shape = RoundedCornerShape(20.dp),
+                    title = { Text("Clear History?", color = TextPrimary, fontWeight = FontWeight.Bold) },
+                    text = { Text("This will remove all ${history.size} items from your watch history.", color = TextSecondary) },
+                    confirmButton = {
+                        TextButton(onClick = { onClearAll(); showConfirm = false }) {
+                            Text("Clear All", color = ErrorRed, fontWeight = FontWeight.Bold)
+                        }
+                    },
+                    dismissButton = {
+                        TextButton(onClick = { showConfirm = false }) {
+                            Text("Cancel", color = TextTertiary)
+                        }
+                    }
+                )
             }
         }
 
         LazyColumn(
             contentPadding = PaddingValues(horizontal = 16.dp, vertical = 4.dp),
-            verticalArrangement = Arrangement.spacedBy(10.dp)
+            verticalArrangement = Arrangement.spacedBy(10.dp),
+            modifier = Modifier.fillMaxSize()
         ) {
-            items(history) { item ->
-                HistoryItem(
+            items(history, key = { it.id }) { item ->
+                HistoryItemCard(
                     item = item,
                     onClick = { onMovieClick(item.movieId, item.mediaType == "tv") },
                     onRemove = { onRemove(item.movieId) }
                 )
             }
+            item { Spacer(Modifier.height(100.dp)) }
         }
     }
 }
 
 @Composable
-fun HistoryItem(item: WatchHistory, onClick: () -> Unit, onRemove: () -> Unit) {
-    Row(
+fun HistoryItemCard(
+    item: WatchHistory,
+    onClick: () -> Unit,
+    onRemove: () -> Unit
+) {
+    val progress = item.progressPercent.coerceIn(0f, 1f)
+    val dateStr = remember(item.watchedAt) {
+        SimpleDateFormat("MMM d, yyyy", Locale.US).format(Date(item.watchedAt))
+    }
+
+    Box(
         modifier = Modifier
             .fillMaxWidth()
-            .clip(RoundedCornerShape(12.dp))
+            .clip(RoundedCornerShape(14.dp))
             .background(BlackCard)
+            .border(0.5.dp, BlackBorder, RoundedCornerShape(14.dp))
             .clickable(onClick = onClick)
-            .padding(10.dp),
-        horizontalArrangement = Arrangement.spacedBy(12.dp),
-        verticalAlignment = Alignment.CenterVertically
     ) {
-        Box(
-            modifier = Modifier
-                .width(65.dp)
-                .height(90.dp)
-                .clip(RoundedCornerShape(8.dp))
-                .background(BlackElevated)
-        ) {
-            AsyncImage(
-                model = item.posterPath?.toTmdbImageUrl("w185"),
-                contentDescription = item.title,
-                contentScale = ContentScale.Crop,
-                modifier = Modifier.fillMaxSize()
-            )
-            if (item.progressPercent > 0f) {
-                LinearProgressIndicator(
-                    progress = { item.progressPercent },
+        Row(modifier = Modifier.fillMaxWidth()) {
+            // Poster thumbnail
+            Box(
+                modifier = Modifier
+                    .width(90.dp)
+                    .height(130.dp)
+                    .clip(RoundedCornerShape(topStart = 14.dp, bottomStart = 14.dp))
+                    .background(BlackElevated)
+            ) {
+                AsyncImage(
+                    model = item.posterPath?.toTmdbImageUrl("w185"),
+                    contentDescription = item.title,
+                    contentScale = ContentScale.Crop,
+                    modifier = Modifier.fillMaxSize()
+                )
+                // Play overlay
+                Box(
                     modifier = Modifier
-                        .fillMaxWidth()
-                        .height(3.dp)
-                        .align(Alignment.BottomCenter),
-                    color = AccentRed,
-                    trackColor = BlackElevated
-                )
+                        .fillMaxSize()
+                        .background(Color(0x66000000)),
+                    contentAlignment = Alignment.Center
+                ) {
+                    Icon(
+                        Icons.Default.PlayArrow,
+                        null,
+                        tint = TextPrimary.copy(alpha = 0.8f),
+                        modifier = Modifier.size(28.dp)
+                    )
+                }
             }
-        }
-        Column(modifier = Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(4.dp)) {
-            Text(item.title, color = TextPrimary, fontSize = 14.sp, fontWeight = FontWeight.SemiBold, maxLines = 2, overflow = TextOverflow.Ellipsis)
-            val dateStr = SimpleDateFormat("MMM dd, yyyy", Locale.US).format(Date(item.watchedAt))
-            Text(dateStr, color = TextTertiary, fontSize = 11.sp)
-            if (item.progressPercent > 0f) {
+
+            // Content
+            Column(
+                modifier = Modifier
+                    .weight(1f)
+                    .padding(12.dp),
+                verticalArrangement = Arrangement.spacedBy(6.dp)
+            ) {
                 Text(
-                    "${(item.progressPercent * 100).toInt()}% watched",
-                    color = AccentRed,
-                    fontSize = 11.sp
+                    item.title,
+                    color = TextPrimary,
+                    fontSize = 15.sp,
+                    fontWeight = FontWeight.SemiBold,
+                    maxLines = 2,
+                    overflow = TextOverflow.Ellipsis
+                )
+                // Episode info
+                if (item.season != null && item.episode != null) {
+                    Text(
+                        "S${item.season} E${item.episode}",
+                        color = AccentCyan,
+                        fontSize = 11.sp,
+                        fontWeight = FontWeight.Medium
+                    )
+                }
+                // Date
+                Text(dateStr, color = TextTertiary, fontSize = 11.sp)
+                // Progress info
+                if (item.durationMs > 0) {
+                    Text(
+                        "${item.progressMs.toProgressString()} / ${item.durationMs.toProgressString()}",
+                        color = TextTertiary,
+                        fontSize = 11.sp
+                    )
+                }
+                Spacer(Modifier.weight(1f))
+                // Progress bar
+                if (progress > 0f) {
+                    Column(verticalArrangement = Arrangement.spacedBy(3.dp)) {
+                        LinearProgressIndicator(
+                            progress = { progress },
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .height(3.dp)
+                                .clip(RoundedCornerShape(2.dp)),
+                            color = AccentRed,
+                            trackColor = BlackElevated,
+                        )
+                        if (progress >= 0.9f) {
+                            Text("Watched", color = Success, fontSize = 10.sp)
+                        }
+                    }
+                }
+            }
+
+            // Delete button
+            Box(
+                modifier = Modifier
+                    .padding(8.dp)
+                    .size(32.dp)
+                    .clip(RoundedCornerShape(8.dp))
+                    .background(BlackElevated)
+                    .border(0.5.dp, BlackBorder, RoundedCornerShape(8.dp))
+                    .clickable(onClick = onRemove)
+                    .align(Alignment.CenterVertically),
+                contentAlignment = Alignment.Center
+            ) {
+                Icon(
+                    Icons.Default.Delete,
+                    null,
+                    tint = TextTertiary,
+                    modifier = Modifier.size(16.dp)
                 )
             }
-        }
-        IconButton(onClick = onRemove, modifier = Modifier.size(32.dp)) {
-            Icon(Icons.Default.Delete, contentDescription = "Remove", tint = TextTertiary, modifier = Modifier.size(16.dp))
         }
     }
 }

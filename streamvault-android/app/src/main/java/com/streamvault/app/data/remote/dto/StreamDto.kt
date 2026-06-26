@@ -10,7 +10,7 @@ data class StremioManifestResponse(
     @SerializedName("version") val version: String,
     @SerializedName("name") val name: String,
     @SerializedName("description") val description: String?,
-    @SerializedName("resources") val resources: List<String>?,
+    @SerializedName("resources") val resources: List<Any>?,
     @SerializedName("types") val types: List<String>?,
     @SerializedName("catalogs") val catalogs: List<Any>?
 )
@@ -33,22 +33,29 @@ data class StremioStreamDto(
         val quality = extractQuality(titleText)
         val size = behaviorHints?.videoSize ?: extractSizeFromTitle(titleText)
         val seeds = extractSeedsFromTitle(titleText)
-        val isTorrent = infoHash != null
+        val peers = extractPeersFromTitle(titleText)
+        val language = extractLanguageFromTitle(titleText)
+        val isTorrent = infoHash != null || (url?.startsWith("magnet:") == true)
+        val cached = titleText.contains("⚡", ignoreCase = false)
+                || titleText.contains("[cache]", ignoreCase = true)
 
         return Stream(
-            id = "${addonId}_${infoHash ?: url}_${fileIdx}",
+            id = "${addonId}_${infoHash?.uppercase() ?: url}_${fileIdx}",
             title = titleText,
-            url = url ?: "",
-            infoHash = infoHash,
+            url = url ?: (if (infoHash != null) "magnet:?xt=urn:btih:$infoHash" else ""),
+            infoHash = infoHash?.uppercase(),
             fileIdx = fileIdx,
             quality = quality,
             size = size,
             seeds = seeds,
+            peers = peers,
             provider = addonName,
             addonId = addonId,
             isTorrent = isTorrent,
+            language = language,
             subtitles = subtitles?.map { it.toSubtitle() } ?: emptyList(),
-            behaviorHints = behaviorHints?.toBehaviorHints()
+            behaviorHints = behaviorHints?.toBehaviorHints(),
+            cached = cached
         )
     }
 
@@ -57,24 +64,61 @@ data class StremioStreamDto(
         title.contains("1080p", ignoreCase = true) -> "1080p"
         title.contains("720p", ignoreCase = true) -> "720p"
         title.contains("480p", ignoreCase = true) -> "480p"
+        title.contains("360p", ignoreCase = true) -> "360p"
+        title.contains("HDR", ignoreCase = true) -> "1080p"
+        title.contains("HD", ignoreCase = true) -> "HD"
         else -> "HD"
     }
 
     private fun extractSizeFromTitle(title: String): Long? {
-        val gbRegex = Regex("([0-9.]+)\\s*GB", RegexOption.IGNORE_CASE)
-        val mbRegex = Regex("([0-9.]+)\\s*MB", RegexOption.IGNORE_CASE)
+        val gbRegex = Regex("([0-9]+(?:[.,][0-9]+)?)\\s*GB", RegexOption.IGNORE_CASE)
+        val mbRegex = Regex("([0-9]+(?:[.,][0-9]+)?)\\s*MB", RegexOption.IGNORE_CASE)
         val gbMatch = gbRegex.find(title)
         val mbMatch = mbRegex.find(title)
         return when {
-            gbMatch != null -> (gbMatch.groupValues[1].toDoubleOrNull()?.times(1024 * 1024 * 1024))?.toLong()
-            mbMatch != null -> (mbMatch.groupValues[1].toDoubleOrNull()?.times(1024 * 1024))?.toLong()
+            gbMatch != null -> {
+                val v = gbMatch.groupValues[1].replace(',', '.').toDoubleOrNull() ?: 0.0
+                (v * 1024 * 1024 * 1024).toLong()
+            }
+            mbMatch != null -> {
+                val v = mbMatch.groupValues[1].replace(',', '.').toDoubleOrNull() ?: 0.0
+                (v * 1024 * 1024).toLong()
+            }
             else -> null
         }
     }
 
     private fun extractSeedsFromTitle(title: String): Int? {
-        val seedRegex = Regex("👤\\s*([0-9]+)")
-        return seedRegex.find(title)?.groupValues?.get(1)?.toIntOrNull()
+        val seedRegex = Regex("👤\\s*([0-9,]+)")
+        val altRegex = Regex("\\bS:?\\s*([0-9]+)", RegexOption.IGNORE_CASE)
+        return seedRegex.find(title)?.groupValues?.get(1)?.replace(",", "")?.toIntOrNull()
+            ?: altRegex.find(title)?.groupValues?.get(1)?.toIntOrNull()
+    }
+
+    private fun extractPeersFromTitle(title: String): Int? {
+        val peerRegex = Regex("🔗\\s*([0-9,]+)")
+        val altRegex = Regex("\\bP:?\\s*([0-9]+)", RegexOption.IGNORE_CASE)
+        return peerRegex.find(title)?.groupValues?.get(1)?.replace(",", "")?.toIntOrNull()
+            ?: altRegex.find(title)?.groupValues?.get(1)?.toIntOrNull()
+    }
+
+    private fun extractLanguageFromTitle(title: String): String? {
+        val t = title.uppercase()
+        return when {
+            t.contains("HINDI") || t.contains("हिंदी") -> "Hindi"
+            t.contains("TAMIL") -> "Tamil"
+            t.contains("TELUGU") -> "Telugu"
+            t.contains("MALAYALAM") -> "Malayalam"
+            t.contains("KANNADA") -> "Kannada"
+            t.contains("JAPANESE") -> "Japanese"
+            t.contains("KOREAN") -> "Korean"
+            t.contains("CHINESE") || t.contains("MANDARIN") -> "Chinese"
+            t.contains("SPANISH") -> "Spanish"
+            t.contains("FRENCH") -> "French"
+            t.contains("GERMAN") -> "German"
+            t.contains("MULTI") || t.contains("DUAL") -> "Multi"
+            else -> null
+        }
     }
 }
 

@@ -82,28 +82,3 @@ class HistoryViewModel @Inject constructor(
         viewModelScope.launch { localRepository.clearHistory() }
     }
 }
-
-@HiltViewModel
-class DownloadsViewModel @Inject constructor(
-    private val localRepository: LocalRepository
-) : ViewModel() {
-
-    val downloads: StateFlow<List<Download>> = localRepository.getDownloads()
-        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), emptyList())
-
-    fun deleteDownload(id: String) {
-        viewModelScope.launch { localRepository.deleteDownload(id) }
-    }
-}
-
-@HiltViewModel
-class SettingsViewModel @Inject constructor(
-    private val streamRepository: com.streamvault.app.domain.repository.StreamRepository
-) : ViewModel() {
-
-    val addons = streamRepository.getAllAddons()
-
-    fun toggleAddon(addonId: String, enabled: Boolean) {
-        viewModelScope.launch { streamRepository.toggleAddon(addonId, enabled) }
-    }
-}

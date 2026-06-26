@@ -10,9 +10,11 @@ import com.streamvault.app.data.local.entities.*
         HistoryEntity::class,
         FavoriteEntity::class,
         DownloadEntity::class,
-        CachedMovieEntity::class
+        CachedMovieEntity::class,
+        PlaybackPositionEntity::class,
+        SubtitlePreferenceEntity::class
     ],
-    version = 1,
+    version = 2,
     exportSchema = false
 )
 abstract class AppDatabase : RoomDatabase() {
@@ -20,4 +22,6 @@ abstract class AppDatabase : RoomDatabase() {
     abstract fun favoriteDao(): FavoriteDao
     abstract fun downloadDao(): DownloadDao
     abstract fun cachedMovieDao(): CachedMovieDao
+    abstract fun playbackPositionDao(): PlaybackPositionDao
+    abstract fun subtitlePreferenceDao(): SubtitlePreferenceDao
 }
