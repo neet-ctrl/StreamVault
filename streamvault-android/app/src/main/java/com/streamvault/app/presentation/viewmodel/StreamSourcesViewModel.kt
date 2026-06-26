@@ -31,23 +31,23 @@ class StreamSourcesViewModel @Inject constructor(
     fun loadMovieStreams(imdbId: String) {
         viewModelScope.launch {
             _uiState.value = StreamSourcesUiState(isLoading = true)
-            val allStreams = mutableListOf<Stream>()
             streamRepository.getMovieStreams(imdbId).collect { result ->
                 when (result) {
                     is StreamResult.Loading -> {
                         _uiState.value = _uiState.value.copy(
-                            loadingAddons = _uiState.value.loadingAddons + result.addonId
+                            loadingAddons = _uiState.value.loadingAddons + result.addonId,
+                            isLoading = true
                         )
                     }
                     is StreamResult.Success -> {
-                        allStreams.addAll(result.streams)
-                        val sorted = allStreams.sortedWith(
-                            compareByDescending<Stream> { qualityOrder(it.quality) }
-                                .thenByDescending { it.seeds ?: 0 }
-                        )
+                        // result.streams is already the full deduped+ranked list from the repository.
+                        // Replace (don't accumulate) so we never double-count previous addon results.
+                        // Also mark this addon as no longer loading.
+                        val remaining = _uiState.value.loadingAddons - result.addonId
                         _uiState.value = _uiState.value.copy(
-                            streams = sorted,
-                            isLoading = _uiState.value.loadingAddons.isNotEmpty()
+                            streams = result.streams,
+                            loadingAddons = remaining,
+                            isLoading = remaining.isNotEmpty()
                         )
                     }
                     is StreamResult.Error -> {
@@ -65,23 +65,23 @@ class StreamSourcesViewModel @Inject constructor(
     fun loadTvStreams(imdbId: String, season: Int, episode: Int) {
         viewModelScope.launch {
             _uiState.value = StreamSourcesUiState(isLoading = true)
-            val allStreams = mutableListOf<Stream>()
             streamRepository.getTvStreams(imdbId, season, episode).collect { result ->
                 when (result) {
                     is StreamResult.Loading -> {
                         _uiState.value = _uiState.value.copy(
-                            loadingAddons = _uiState.value.loadingAddons + result.addonId
+                            loadingAddons = _uiState.value.loadingAddons + result.addonId,
+                            isLoading = true
                         )
                     }
                     is StreamResult.Success -> {
-                        allStreams.addAll(result.streams)
-                        val sorted = allStreams.sortedWith(
-                            compareByDescending<Stream> { qualityOrder(it.quality) }
-                                .thenByDescending { it.seeds ?: 0 }
-                        )
+                        // result.streams is already the full deduped+ranked list from the repository.
+                        // Replace (don't accumulate) so we never double-count previous addon results.
+                        // Also mark this addon as no longer loading.
+                        val remaining = _uiState.value.loadingAddons - result.addonId
                         _uiState.value = _uiState.value.copy(
-                            streams = sorted,
-                            isLoading = _uiState.value.loadingAddons.isNotEmpty()
+                            streams = result.streams,
+                            loadingAddons = remaining,
+                            isLoading = remaining.isNotEmpty()
                         )
                     }
                     is StreamResult.Error -> {
@@ -94,14 +94,6 @@ class StreamSourcesViewModel @Inject constructor(
             }
             _uiState.value = _uiState.value.copy(isLoading = false, loadingAddons = emptySet())
         }
-    }
-
-    private fun qualityOrder(quality: String): Int = when (quality) {
-        "4K" -> 4
-        "1080p" -> 3
-        "720p" -> 2
-        "480p" -> 1
-        else -> 0
     }
 
     fun filterByQuality(quality: String?) {

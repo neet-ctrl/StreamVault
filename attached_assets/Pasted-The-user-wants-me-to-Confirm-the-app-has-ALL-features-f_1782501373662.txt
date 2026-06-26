@@ -1,0 +1,180 @@
+The user wants me to:
+
+Confirm the app has ALL features from their requirements list
+Study the Stremio GitHub repos and Torrentio API to understand how they work
+Make sure nothing is missing
+Let me first explore the current codebase to understand what's there, then identify gaps against the full feature list.
+
+Key missing features from the requirements:
+
+Addon manifest parser - parse all 6 addon manifests dynamically
+Multi-addon resolver - simultaneous querying, merging, deduplication
+Source ranking - seeders, quality, file size, health
+Player features - many missing:
+Subtitle loading, searching, delay adjustment, and style customization
+Audio track selection
+Gesture controls for brightness and volume
+Picture-in-picture mode with actual implementation
+Continue watching functionality
+Auto-play for next episodes
+Intro skip detection
+Quality switching
+Sleep timer
+Stream health monitoring and reconnection logic
+Playback position persistence
+Hardware acceleration toggle
+Torrent system - libtorrent integration for pre-buffering, background downloads, pause/resume/stop/delete controls, and displaying speed, peer count, and ETA
+Database - still need to determine what's required for storing playback positions and subtitle preferences
+Settings - missing configuration options for pre-buffer size, max connections, torrent timeout, external player support, and hardware acceleration
+Extra features - magnet and torrent hash parsing, source ranking and seed-based sorting, quality filtering, duplicate removal, smart fallback streams, retry logic on failures, metadata caching, and offline playback support
+This is a substantial list of missing pieces. I should be upfront about the scope and systematically build out the remaining components, starting with the Stremio addon protocol parser and multi-source handling.
+
+Now I'm reviewing what already exists in the codebase to understand the current PlayerViewModel and key files, then I'll add everything that's missing.
+
+Let me audit the current code against every single requirement, then systematically fill every gap.
+
+Let me read the remaining critical files to get the full picture before filling gaps.
+
+Now I have a clear picture. Let me audit what's missing vs what's required:
+
+Missing from the requirements:
+
+Stremio Addon Manifest Parser - Need to dynamically parse manifests from URLs
+Stream Model - Missing language field
+Stream Deduplication - Remove duplicate torrents by infoHash
+Source Ranking - Seed-based + quality-based + size-based ranking
+Magnet Parser - Parse magnet URLs to extract hash, trackers, etc.
+Torrent Streaming Engine - libtorrent4j integration for streaming magnets via HTTP
+Playback Persistence - Need entities to track playback position and subtitle preferences across sessions
+Player Enhancement - Missing subtitle management, audio track selection, gesture controls for brightness and volume, horizontal swipe seeking, picture-in-picture, sleep timer, stream health monitoring with reconnection logic, hardware acceleration options, auto-play for next episodes, intro skip detection, and mid-playback quality switching
+Settings - Still need to define what goes here
+, including buffer configuration, connection limits, torrent timeouts, external player options, and hardware acceleration toggles
+10. Subtitle Integration - Pulling from services like OpenSubtitles with automatic fallback on failures
+
+Resume Functionality - Saving and restoring watch position for continued viewing
+Offline Support - Playing downloaded content without internet
+Discovery Screens - Building out history and favorites views that the library calls into
+Now I'm planning the core utility files I need to create: a magnet link parser, source ranking system, addon manifest parser for Stremio integration, torrent streaming engine using libtorrent4j, and subtitle management system.
+
+Next I'm setting up the database layer with entities for tracking playback position and subtitle preferences, updating the main database and DAO files to include these new tables, then building out the UI screens for favorites and history along with enhanced player controls for gestures, subtitles, audio tracks, sleep timers, and picture-in-picture mode. I'll also need to update the view models to handle all this state management and add the ranking logic to the stream fetching. I'm organizing the remaining work into three batches: first the critical database and parsing infrastructure, then the screen implementations and engine components, and finally the updated view models and repositories. I should also verify whether SettingsViewModel and DownloadsViewModel are already in place.
+
+Now I have a complete audit. Here's what's missing vs your requirements:
+
+❌ MagnetParser — no magnet/hash parsing
+❌ StreamRanker — no ranking/dedup/fallback logic
+❌ AddonManifestParser — manifest not dynamically parsed
+❌ TorrentEngine — no libtorrent HTTP stream server
+❌ SubtitleManager — no subtitle search/load/delay/style
+❌ DB missing: PlaybackPosition, SubtitlePreference entities
+❌ FavoritesContent + HistoryContent composables missing (Library screen crashes)
+❌ DownloadsViewModel + SettingsViewModel missing
+❌ Player missing: gestures (brightness/volume/seek), audio track selector, PiP, sleep timer UI, stream health, subtitle panel, next episode
+❌ Streams missing: dedup by infoHash, language detection, smart fallback/retry
+❌ Settings missing: pre-buffer, max connections, torrent timeout, external player, HW accel
+Writing all of them now.
+
+Let me continue writing the missing files. I need to write the remaining critical files in parallel batches:
+
+Batch 2 - Engines, managers, missing ViewModels, and screen composables:
+
+TorrentEngine.kt
+SubtitleManager.kt
+FavoritesScreen.kt (with FavoritesContent)
+HistoryScreen.kt (with HistoryContent)
+DownloadsViewModel.kt
+SettingsViewModel.kt
+Updated StreamRepositoryImpl.kt with dedup + ranking + retry
+Batch 3 - Updated core player and remaining files:
+
+PlayerViewModel.kt
+PlayerScreen.kt
+Stream.kt (add language field)
+StreamDto.kt (add language parsing)
+Constants.kt
+LocalRepositoryImpl.kt if it exists, or create it
+di/AppModule.kt to include new DAOs
+I should also review what LocalRepositoryImpl looks like and check the DI module setup.
+
+Continuing — writing TorrentEngine, SubtitleManager, all missing ViewModels, screens, and updated core files in one big parallel batch.
+
+Now I have all the context I need. Let me write all the remaining missing files in parallel. I'll do this in one large batch:
+
+TorrentEngine.kt - libtorrent4j streaming engine
+SubtitleManager.kt - subtitle loading/search/delay
+FavoritesScreen.kt - FavoritesContent composable
+HistoryScreen.kt - HistoryContent composable
+DownloadsViewModel.kt - Downloads ViewModel
+SettingsViewModel.kt - Settings ViewModel
+Updated StreamRepositoryImpl.kt - with dedup + ranking + retry + language
+Updated PlayerViewModel.kt - full state management with all features
+Updated PlayerScreen.kt - all gesture controls
+Updated AppModule.kt - new DAOs
+Updated LocalRepositoryImpl.kt - new playback position methods
+Updated Stream.kt - add language field
+Updated StreamDto.kt - add language parsing
+Updated LocalRepository.kt interface - add new methods
+Updated Download.kt - add speed/eta/peers
+Updated Constants.kt - add new settings constants
+That's 16 files total - writing them all at once...
+
+Now writing all 16 remaining missing files in one parallel batch.
+
+Continuing — reading the existing files I need to update, then writing all remaining files in parallel.
+
+Optimized Agent memory
+Let me now write all the remaining missing files in one large parallel batch:
+
+FavoritesScreen.kt (fully rewritten with FavoritesContent)
+HistoryScreen.kt (fully rewritten with HistoryContent)
+PlayerScreen.kt (fully rewritten with all gesture controls)
+SettingsScreen.kt (fully rewritten with all settings)
+Constants.kt (updated with new settings constants)
+Extensions.kt (updated with speed/ETA formatters)
+StreamDto.kt (updated with language parsing)
+Let me write them all in parallel now.
+
+Writing all remaining files in one parallel batch — FavoritesScreen, HistoryScreen, full PlayerScreen with gestures, SettingsScreen with all 10 settings, updated Constants/Extensions/StreamDto.
+
+Let me check if there are any remaining missing pieces. Let me verify the GitHub Actions workflow, build.gradle, and check for any components that reference things that might not exist.
+
+Let me check a few key files:
+
+The LibraryScreen that imports FavoritesContent and HistoryContent
+The build.gradle for libtorrent4j dependency
+The GitHub Actions workflow
+The DownloadsScreen that needs DownloadsViewModel
+The RatingBadge component referenced in FavoritesScreen
+The PictureInPicture icons in PlayerScreen
+Good — now let me check any remaining gaps: RatingBadge component, LibraryScreen, DownloadsScreen, and the build.gradle to make sure libtorrent4j is wired up.
+
+Good, I can see the DownloadsScreen.kt already exists. Let me read it to see if it needs updating to use the new DownloadsViewModel with the torrent progress features.
+
+I also need to check the DownloadsScreen and make sure the build.gradle has the libtorrent4j dependency. I confirmed libtorrent4j is already in the build.gradle at line 161.
+
+Let me also check if the LibraryViewModel has the history and favorites state, and if there are any remaining issues.
+
+Let me check:
+
+DownloadsScreen.kt - to see if it uses DownloadsViewModel
+LibraryViewModel.kt - to verify it has history state
+3. AppNavigation.kt - to confirm screens are properly connected
+
+These checks will tell me if all the features are wired up correctly.
+
+Let me check the final remaining pieces — DownloadsScreen and LibraryViewModel — to ensure everything is wired correctly.
+
+I see an issue — the LibraryViewModel.kt has older versions of DownloadsViewModel and SettingsViewModel that I've now replaced with separate files. This will cause a duplicate class compilation error since I wrote DownloadsViewModel.kt and SettingsViewModel.kt as separate files, but they're ALSO defined in LibraryViewModel.kt.
+
+I need to remove the duplicate class definitions from LibraryViewModel.kt. Let me update that file to remove the duplicate DownloadsViewModel and SettingsViewModel definitions.
+
+Also, I notice the DownloadsScreen.kt already imports DownloadsViewModel from the viewmodel package — but now there are TWO DownloadsViewModel classes: one in LibraryViewModel.kt and one in the new DownloadsViewModel.kt.
+
+I need to clean up LibraryViewModel.kt by removing both the DownloadsViewModel and SettingsViewModel class definitions that are now duplicated in their own files.
+
+Critical issue found — LibraryViewModel.kt has duplicate DownloadsViewModel and SettingsViewModel class definitions that will conflict with my new separate files. Fixing that now plus a few other wiring issues.
+
+You've reached your daily free quota limit. It will reset at 12:00 AM UTC.
+
+Enhance app functionality by adding playback and subtitle settings
+Jun 27, 2026, 12:28 AM
+You're out of credits.

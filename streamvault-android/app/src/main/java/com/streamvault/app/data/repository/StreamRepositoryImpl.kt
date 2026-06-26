@@ -50,7 +50,7 @@ class StreamRepositoryImpl @Inject constructor(
 
                     accumulated.addAll(streams)
                     val ranked = StreamRanker.rank(accumulated)
-                    emit(StreamResult.Success(ranked))
+                    emit(StreamResult.Success(ranked, addon.id))
                     break
                 } catch (e: Exception) {
                     retries++
@@ -86,7 +86,7 @@ class StreamRepositoryImpl @Inject constructor(
 
                     accumulated.addAll(streams)
                     val ranked = StreamRanker.rank(accumulated)
-                    emit(StreamResult.Success(ranked))
+                    emit(StreamResult.Success(ranked, addon.id))
                     break
                 } catch (e: Exception) {
                     retries++

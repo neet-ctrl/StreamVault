@@ -57,7 +57,8 @@ data class StreamAddon(
 )
 
 sealed class StreamResult {
-    data class Success(val streams: List<Stream>) : StreamResult()
+    /** [addonId] identifies which addon produced this ranked snapshot, so callers can remove it from their in-progress set. */
+    data class Success(val streams: List<Stream>, val addonId: String) : StreamResult()
     data class Error(val message: String, val addonId: String) : StreamResult()
     data class Loading(val addonId: String) : StreamResult()
 }

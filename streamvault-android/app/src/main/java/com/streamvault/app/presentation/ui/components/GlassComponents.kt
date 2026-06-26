@@ -286,7 +286,7 @@ fun StreamCard(
                             Box(
                                 modifier = Modifier
                                     .size(7.dp)
-                                    .clip(CircleShape = RoundedCornerShape(50))
+                                    .clip(RoundedCornerShape(50))
                                     .background(seedHealth)
                             )
                             Text("${stream.seeds} seeds", color = seedHealth, fontSize = 11.sp, fontWeight = FontWeight.Medium)

@@ -1,0 +1,207 @@
+Build a fully native Android APK app called StreamVault using Kotlin + Jetpack Compose.
+
+Goal:
+Create a Stremio-like advanced streaming app that fetches movie streams from the Torrentio addon API using the open Stremio addon protocol, with a powerful built-in player like Stremio.
+
+Important:
+Use these open-source references as base architecture and code inspiration:
+
+Stremio Core:
+https://github.com/Stremio/stremio-core
+
+Stremio Android TV:
+https://github.com/Stremio/stremio-android-tv
+
+Stremio Addon SDK:
+https://github.com/Stremio/stremio-addon-sdk
+
+Stremio Addon Protocol:
+https://stremio.github.io/stremio-addon-sdk/
+
+Torrentio API:
+https://torrentio.strem.fun/manifest.json
+
+Read and understand how Stremio:
+
+- parses addon manifests
+- resolves streams
+- manages torrent sources
+- handles subtitles
+- handles playback state
+- handles continue watching
+- manages metadata
+
+Build app architecture inspired by Stremio but fully optimized for Android phones.
+
+Core system:
+
+1. Search any movie/series
+   Use TMDB API for:
+
+- search
+- trending
+- popular
+- upcoming
+- top rated
+
+2. On movie click:
+   Get IMDb ID.
+
+3. Query Torrentio:
+   https://torrentio.strem.fun/stream/movie/{imdb_id}.json
+
+4. Parse:
+
+- title
+- quality
+- seeders
+- file size
+- provider
+- language
+- magnet URL
+
+5. Show all sources like Stremio source cards.
+
+Main requirement:
+Make a powerful built-in player by studying Stremio’s player implementation.
+
+Player requirements:
+Use ExoPlayer as base but implement Stremio-like advanced controls:
+
+- MKV support
+- MP4 support
+- torrent streaming
+- subtitle loading
+- subtitle search
+- subtitle delay
+- audio track selector
+- playback speed
+- gesture brightness
+- gesture volume
+- gesture seek
+- double tap seek
+- PiP mode
+- continue watching
+- next episode auto-play
+- intro skip button
+- quality switch
+- full-screen lock
+- sleep timer
+- stream health monitor
+- stream reconnect
+- remember playback position
+- subtitle style customization
+- hardware acceleration toggle
+
+Torrent system:
+Use libtorrent.
+
+Torrent features:
+
+- stream directly from magnet
+- pre-buffer before play
+- background downloading
+- download whole file
+- pause
+- resume
+- stop
+- delete
+- show progress
+- show speed
+- show peers
+- show ETA
+- save to:
+  Movies/StreamVault/
+
+UI requirements:
+Premium modern dark UI.
+
+Style:
+
+- AMOLED black
+- glassmorphism
+- smooth animations
+- rounded cards
+- Stremio + Netflix inspired
+- blur backgrounds
+- cinematic hero banners
+- bottom navigation
+
+Pages:
+
+1. Splash
+2. Home
+3. Search
+4. Movie Details
+5. Stream Sources
+6. Player
+7. Downloads
+8. Library
+9. Watch History
+10. Favorites
+11. Settings
+
+Settings:
+
+- default quality
+- subtitle language
+- player engine
+- auto play
+- download path
+- pre-buffer size
+- max connections
+- torrent timeout
+- external player support
+- hardware acceleration
+
+Architecture:
+Use:
+
+- MVVM
+- Hilt
+- Retrofit
+- Room
+- Coroutines
+- Flow
+- Navigation Compose
+- Repository pattern
+
+Database:
+Store:
+
+- watch history
+- favorites
+- playback positions
+- downloads
+- subtitle preferences
+
+Extra:
+
+- magnet parser
+- torrent hash parser
+- source ranking system
+- seed-based sorting
+- quality filtering
+- duplicate source removal
+- smart stream fallback
+- retry if source fails
+- cache metadata
+- offline downloaded playback
+
+Build as:
+
+- native Android app
+- minimum SDK 26+
+- target latest Android
+- optimized performance
+- scalable modular code
+
+Start by:
+
+1. Creating full project structure.
+2. Implementing Stremio addon parser.
+3. Implementing Torrentio stream fetcher.
+4. Building player engine.
+5. Building torrent streaming engine.
+6. Building UI screens.
+7. Building APK.

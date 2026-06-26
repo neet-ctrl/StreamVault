@@ -107,7 +107,12 @@ fun DownloadsScreen(viewModel: DownloadsViewModel = hiltViewModel()) {
                 verticalArrangement = Arrangement.spacedBy(12.dp)
             ) {
                 items(downloads) { download ->
-                    DownloadItem(download = download, onDelete = { viewModel.deleteDownload(download.id) })
+                    DownloadItem(
+                        download = download,
+                        onPause = { viewModel.pauseDownload(download) },
+                        onResume = { viewModel.resumeDownload(download) },
+                        onDelete = { viewModel.deleteDownload(download.id) }
+                    )
                 }
                 item { Spacer(Modifier.height(80.dp)) }
             }
@@ -116,7 +121,12 @@ fun DownloadsScreen(viewModel: DownloadsViewModel = hiltViewModel()) {
 }
 
 @Composable
-fun DownloadItem(download: Download, onDelete: () -> Unit) {
+fun DownloadItem(
+    download: Download,
+    onPause: () -> Unit,
+    onResume: () -> Unit,
+    onDelete: () -> Unit
+) {
     val progressFraction = if (download.totalSize > 0)
         (download.downloadedSize.toFloat() / download.totalSize.toFloat()).coerceIn(0f, 1f)
     else 0f
@@ -229,17 +239,50 @@ fun DownloadItem(download: Download, onDelete: () -> Unit) {
                 }
             }
 
-            // Action button
-            Box(
-                modifier = Modifier
-                    .size(36.dp)
-                    .clip(RoundedCornerShape(10.dp))
-                    .background(ErrorRed.copy(alpha = 0.1f))
-                    .border(0.5.dp, ErrorRed.copy(alpha = 0.3f), RoundedCornerShape(10.dp))
-                    .clickable { onDelete() },
-                contentAlignment = Alignment.Center
+            // Action buttons: pause/resume + delete
+            Column(
+                verticalArrangement = Arrangement.spacedBy(8.dp),
+                horizontalAlignment = Alignment.CenterHorizontally
             ) {
-                Icon(Icons.Default.Delete, null, tint = ErrorRed, modifier = Modifier.size(17.dp))
+                // Pause / Resume toggle — only shown for active/paused downloads
+                if (download.status == DownloadStatus.DOWNLOADING) {
+                    Box(
+                        modifier = Modifier
+                            .size(36.dp)
+                            .clip(RoundedCornerShape(10.dp))
+                            .background(Warning.copy(alpha = 0.12f))
+                            .border(0.5.dp, Warning.copy(alpha = 0.35f), RoundedCornerShape(10.dp))
+                            .clickable { onPause() },
+                        contentAlignment = Alignment.Center
+                    ) {
+                        Icon(Icons.Default.Pause, null, tint = Warning, modifier = Modifier.size(17.dp))
+                    }
+                } else if (download.status == DownloadStatus.PAUSED) {
+                    Box(
+                        modifier = Modifier
+                            .size(36.dp)
+                            .clip(RoundedCornerShape(10.dp))
+                            .background(Success.copy(alpha = 0.12f))
+                            .border(0.5.dp, Success.copy(alpha = 0.35f), RoundedCornerShape(10.dp))
+                            .clickable { onResume() },
+                        contentAlignment = Alignment.Center
+                    ) {
+                        Icon(Icons.Default.PlayArrow, null, tint = Success, modifier = Modifier.size(17.dp))
+                    }
+                }
+
+                // Delete is always visible
+                Box(
+                    modifier = Modifier
+                        .size(36.dp)
+                        .clip(RoundedCornerShape(10.dp))
+                        .background(ErrorRed.copy(alpha = 0.1f))
+                        .border(0.5.dp, ErrorRed.copy(alpha = 0.3f), RoundedCornerShape(10.dp))
+                        .clickable { onDelete() },
+                    contentAlignment = Alignment.Center
+                ) {
+                    Icon(Icons.Default.Delete, null, tint = ErrorRed, modifier = Modifier.size(17.dp))
+                }
             }
         }
     }
