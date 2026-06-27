@@ -156,5 +156,7 @@ dependencies {
 
     implementation 'com.jakewharton.timber:timber:5.0.1'
 
-    implementation 'com.github.aldenml.libtorrent4j:libtorrent4j-android-arm64:2.1.0-29'
+    implementation 'org.libtorrent4j:libtorrent4j-android-arm64:2.1.0-35'
+    implementation 'org.libtorrent4j:libtorrent4j-android-arm:2.1.0-35'
+    implementation 'org.libtorrent4j:libtorrent4j-android-x86_64:2.1.0-35'
 }
