@@ -14,7 +14,7 @@ import com.streamvault.app.data.local.entities.*
         PlaybackPositionEntity::class,
         SubtitlePreferenceEntity::class
     ],
-    version = 2,
+    version = 3,          // v2→v3: movieId columns changed from Int to String (TEXT)
     exportSchema = false
 )
 abstract class AppDatabase : RoomDatabase() {

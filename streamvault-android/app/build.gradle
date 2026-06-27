@@ -17,9 +17,7 @@ android {
         versionName "1.0.0"
         testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
 
-        buildConfigField "String", "TMDB_API_KEY", "\"${project.findProperty('TMDB_API_KEY') ?: System.getenv('TMDB_API_KEY') ?: ''}\""
-        buildConfigField "String", "TMDB_BASE_URL", "\"https://api.themoviedb.org/3/\""
-        buildConfigField "String", "TMDB_IMAGE_BASE_URL", "\"https://image.tmdb.org/t/p/\""
+        buildConfigField "String", "CINEMETA_URL", "\"https://v3-cinemeta.strem.io\""
 
         ndk {
             abiFilters 'arm64-v8a', 'armeabi-v7a', 'x86_64'

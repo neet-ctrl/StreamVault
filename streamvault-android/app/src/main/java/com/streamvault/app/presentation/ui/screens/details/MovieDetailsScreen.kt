@@ -29,7 +29,7 @@ import com.streamvault.app.presentation.ui.components.*
 import com.streamvault.app.presentation.ui.theme.*
 import com.streamvault.app.presentation.viewmodel.DetailsViewModel
 import com.streamvault.app.util.toRuntimeString
-import com.streamvault.app.util.toTmdbImageUrl
+
 
 @Composable
 fun MovieDetailsScreen(
@@ -96,7 +96,7 @@ fun MovieDetailsScreen(
             item {
                 Box(modifier = Modifier.fillMaxWidth().height(400.dp)) {
                     AsyncImage(
-                        model = backdrop?.toTmdbImageUrl("w1280"),
+                        model = backdrop,
                         contentDescription = title,
                         contentScale = ContentScale.Crop,
                         modifier = Modifier.fillMaxSize()
@@ -178,7 +178,7 @@ fun MovieDetailsScreen(
                             .border(1.dp, Color.White.copy(alpha = 0.1f), RoundedCornerShape(14.dp))
                     ) {
                         AsyncImage(
-                            model = poster?.toTmdbImageUrl("w342"),
+                            model = poster,
                             contentDescription = title,
                             contentScale = ContentScale.Crop,
                             modifier = Modifier.fillMaxSize()
@@ -335,7 +335,7 @@ fun MovieDetailsScreen(
                                         .border(1.dp, BlackBorder, CircleShape)
                                 ) {
                                     AsyncImage(
-                                        model = member.profilePath?.toTmdbImageUrl("w185"),
+                                        model = member.profilePath,
                                         contentDescription = member.name,
                                         contentScale = ContentScale.Crop,
                                         modifier = Modifier.fillMaxSize()

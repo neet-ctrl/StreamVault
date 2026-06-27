@@ -27,7 +27,7 @@ import coil.compose.AsyncImage
 import com.streamvault.app.domain.model.WatchHistory
 import com.streamvault.app.presentation.ui.theme.*
 import com.streamvault.app.util.toProgressString
-import com.streamvault.app.util.toTmdbImageUrl
+
 import java.text.SimpleDateFormat
 import java.util.*
 
@@ -145,7 +145,7 @@ fun HistoryItemCard(
                     .background(BlackElevated)
             ) {
                 AsyncImage(
-                    model = item.posterPath?.toTmdbImageUrl("w185"),
+                    model = item.posterPath,
                     contentDescription = item.title,
                     contentScale = ContentScale.Crop,
                     modifier = Modifier.fillMaxSize()

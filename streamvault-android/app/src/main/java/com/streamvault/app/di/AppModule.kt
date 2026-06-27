@@ -4,8 +4,8 @@ import android.content.Context
 import androidx.room.Room
 import com.streamvault.app.data.local.AppDatabase
 import com.streamvault.app.data.local.dao.*
+import com.streamvault.app.data.remote.api.CinemetaApi
 import com.streamvault.app.data.remote.api.StremioApi
-import com.streamvault.app.data.remote.api.TmdbApi
 import com.streamvault.app.data.repository.*
 import com.streamvault.app.domain.repository.*
 import com.streamvault.app.util.Constants
@@ -42,9 +42,9 @@ object NetworkModule {
 
     @Provides
     @Singleton
-    @Named("tmdb")
-    fun provideTmdbRetrofit(client: OkHttpClient): Retrofit = Retrofit.Builder()
-        .baseUrl(Constants.TMDB_BASE_URL)
+    @Named("cinemeta")
+    fun provideCinemetaRetrofit(client: OkHttpClient): Retrofit = Retrofit.Builder()
+        .baseUrl("${Constants.CINEMETA_URL}/")
         .client(client)
         .addConverterFactory(GsonConverterFactory.create())
         .build()
@@ -53,15 +53,15 @@ object NetworkModule {
     @Singleton
     @Named("stremio")
     fun provideStremioRetrofit(client: OkHttpClient): Retrofit = Retrofit.Builder()
-        .baseUrl("https://torrentio.strem.fun/")
+        .baseUrl("${Constants.TORRENTIO_URL}/")
         .client(client)
         .addConverterFactory(GsonConverterFactory.create())
         .build()
 
     @Provides
     @Singleton
-    fun provideTmdbApi(@Named("tmdb") retrofit: Retrofit): TmdbApi =
-        retrofit.create(TmdbApi::class.java)
+    fun provideCinemetaApi(@Named("cinemeta") retrofit: Retrofit): CinemetaApi =
+        retrofit.create(CinemetaApi::class.java)
 
     @Provides
     @Singleton
@@ -93,7 +93,7 @@ object DatabaseModule {
 abstract class RepositoryModule {
 
     @Binds @Singleton
-    abstract fun bindTmdbRepository(impl: TmdbRepositoryImpl): TmdbRepository
+    abstract fun bindCinemetaRepository(impl: CinemetaRepositoryImpl): CinemetaRepository
 
     @Binds @Singleton
     abstract fun bindStreamRepository(impl: StreamRepositoryImpl): StreamRepository

@@ -27,7 +27,7 @@ import androidx.compose.ui.unit.sp
 import coil.compose.AsyncImage
 import com.streamvault.app.domain.model.Favorite
 import com.streamvault.app.presentation.ui.theme.*
-import com.streamvault.app.util.toTmdbImageUrl
+
 
 @Composable
 fun FavoritesContent(
@@ -108,7 +108,7 @@ fun FavoriteCard(
                 .clickable(onClick = onClick)
         ) {
             AsyncImage(
-                model = favorite.posterPath?.toTmdbImageUrl("w342"),
+                model = favorite.posterPath,
                 contentDescription = favorite.title,
                 contentScale = ContentScale.Crop,
                 modifier = Modifier.fillMaxSize()

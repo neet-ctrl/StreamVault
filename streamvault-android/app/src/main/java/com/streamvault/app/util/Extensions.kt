@@ -6,8 +6,8 @@ import java.text.SimpleDateFormat
 import java.util.Date
 import java.util.Locale
 
-fun String.toTmdbImageUrl(size: String = "w500"): String =
-    "https://image.tmdb.org/t/p/$size$this"
+// NOTE: toTmdbImageUrl() removed — Cinemeta supplies absolute poster/backdrop URLs.
+// Use poster strings directly as Coil model arguments.
 
 fun Int.toRuntimeString(): String {
     val hours = this / 60
@@ -37,7 +37,7 @@ fun Long.toFormattedSize(): String {
         gb > 0 -> "%.2f GB".format(gb.toFloat() + (mb % 1024).toFloat() / 1024f)
         mb > 0 -> "%.1f MB".format(mb.toFloat() + (kb % 1024).toFloat() / 1024f)
         kb > 0 -> "$kb KB"
-        else -> "$this B"
+        else   -> "$this B"
     }
 }
 
@@ -53,12 +53,10 @@ fun Long.toProgressString(): String {
     }
 }
 
-fun Long.toSpeedString(): String {
-    return when {
-        this >= 1_000_000L -> "%.1f MB/s".format(this / 1_000_000f)
-        this >= 1_000L -> "%.0f KB/s".format(this / 1_000f)
-        else -> "$this B/s"
-    }
+fun Long.toSpeedString(): String = when {
+    this >= 1_000_000L -> "%.1f MB/s".format(this / 1_000_000f)
+    this >= 1_000L     -> "%.0f KB/s".format(this / 1_000f)
+    else               -> "$this B/s"
 }
 
 fun Long.toEtaString(): String {
@@ -67,9 +65,9 @@ fun Long.toEtaString(): String {
     val minutes = (this % 3600) / 60
     val seconds = this % 60
     return when {
-        hours > 0 -> "${hours}h ${minutes}m"
+        hours > 0   -> "${hours}h ${minutes}m"
         minutes > 0 -> "${minutes}m ${seconds}s"
-        else -> "${seconds}s"
+        else        -> "${seconds}s"
     }
 }
 
@@ -79,15 +77,13 @@ fun Context.showToast(message: String, duration: Int = Toast.LENGTH_SHORT) {
 
 fun String.extractYear(): String = this.take(4)
 
-fun qualityFromTitle(title: String): String {
-    return when {
-        title.contains("4K", ignoreCase = true) || title.contains("2160p", ignoreCase = true) -> "4K"
-        title.contains("1080p", ignoreCase = true) -> "1080p"
-        title.contains("720p", ignoreCase = true) -> "720p"
-        title.contains("480p", ignoreCase = true) -> "480p"
-        title.contains("HD", ignoreCase = true) -> "HD"
-        else -> "HD"
-    }
+fun qualityFromTitle(title: String): String = when {
+    title.contains("4K", ignoreCase = true) || title.contains("2160p", ignoreCase = true) -> "4K"
+    title.contains("1080p", ignoreCase = true) -> "1080p"
+    title.contains("720p",  ignoreCase = true) -> "720p"
+    title.contains("480p",  ignoreCase = true) -> "480p"
+    title.contains("HD",    ignoreCase = true) -> "HD"
+    else -> "HD"
 }
 
 fun Long.toRelativeTime(): String {
@@ -96,23 +92,23 @@ fun Long.toRelativeTime(): String {
     val hours = minutes / 60
     val days = hours / 24
     return when {
-        days > 7 -> SimpleDateFormat("MMM d", Locale.US).format(Date(this))
-        days > 0 -> "${days}d ago"
-        hours > 0 -> "${hours}h ago"
+        days > 7    -> SimpleDateFormat("MMM d", Locale.US).format(Date(this))
+        days > 0    -> "${days}d ago"
+        hours > 0   -> "${hours}h ago"
         minutes > 0 -> "${minutes}m ago"
-        else -> "Just now"
+        else        -> "Just now"
     }
 }
 
 fun Float.toBrightnessLevel(): String = when {
     this < 0.25f -> "Low"
     this < 0.75f -> "Medium"
-    else -> "High"
+    else         -> "High"
 }
 
 fun Float.toVolumeIcon(): String = when {
-    this <= 0f -> "🔇"
+    this <= 0f  -> "🔇"
     this < 0.3f -> "🔈"
     this < 0.7f -> "🔉"
-    else -> "🔊"
+    else        -> "🔊"
 }

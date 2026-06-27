@@ -27,7 +27,7 @@ import coil.compose.AsyncImage
 import com.streamvault.app.domain.model.Movie
 import com.streamvault.app.domain.model.TvShow
 import com.streamvault.app.presentation.ui.theme.*
-import com.streamvault.app.util.toTmdbImageUrl
+
 
 @Composable
 fun MovieCard(
@@ -70,7 +70,7 @@ fun MovieCard(
                 )
         ) {
             AsyncImage(
-                model = movie.posterPath?.toTmdbImageUrl("w342"),
+                model = movie.posterPath,
                 contentDescription = movie.title,
                 contentScale = ContentScale.Crop,
                 modifier = Modifier.fillMaxSize()
@@ -149,7 +149,7 @@ fun TvCard(
                 )
         ) {
             AsyncImage(
-                model = show.posterPath?.toTmdbImageUrl("w342"),
+                model = show.posterPath,
                 contentDescription = show.name,
                 contentScale = ContentScale.Crop,
                 modifier = Modifier.fillMaxSize()
@@ -211,7 +211,7 @@ fun FeaturedBanner(
             .height(520.dp)
     ) {
         AsyncImage(
-            model = movie.backdropPath?.toTmdbImageUrl("w1280"),
+            model = movie.backdropPath,
             contentDescription = movie.title,
             contentScale = ContentScale.Crop,
             modifier = Modifier.fillMaxSize()

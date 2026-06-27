@@ -2,7 +2,8 @@ package com.streamvault.app.domain.model
 
 data class Download(
     val id: String,
-    val movieId: Int,
+    /** IMDB ID, e.g. "tt1234567" */
+    val movieId: String,
     val title: String,
     val posterPath: String?,
     val quality: String,
@@ -32,7 +33,8 @@ enum class DownloadStatus {
 
 data class WatchHistory(
     val id: String,
-    val movieId: Int,
+    /** IMDB ID, e.g. "tt1234567" */
+    val movieId: String,
     val title: String,
     val posterPath: String?,
     val mediaType: String,
@@ -48,7 +50,8 @@ data class WatchHistory(
 
 data class PlaybackPosition(
     val contentId: String,
-    val movieId: Int,
+    /** IMDB ID, e.g. "tt1234567" */
+    val movieId: String,
     val title: String,
     val posterPath: String?,
     val mediaType: String,
@@ -80,7 +83,8 @@ data class SubtitlePreference(
 
 data class Favorite(
     val id: String,
-    val movieId: Int,
+    /** IMDB ID, e.g. "tt1234567" */
+    val movieId: String,
     val title: String,
     val posterPath: String?,
     val mediaType: String,

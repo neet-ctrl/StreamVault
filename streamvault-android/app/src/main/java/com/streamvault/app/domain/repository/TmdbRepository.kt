@@ -3,21 +3,18 @@ package com.streamvault.app.domain.repository
 import com.streamvault.app.domain.model.*
 import kotlinx.coroutines.flow.Flow
 
-interface TmdbRepository {
-    suspend fun getTrending(page: Int = 1): Result<List<Movie>>
-    suspend fun getTrendingMovies(page: Int = 1): Result<List<Movie>>
-    suspend fun getTrendingTv(page: Int = 1): Result<List<TvShow>>
-    suspend fun getPopularMovies(page: Int = 1): Result<List<Movie>>
-    suspend fun getPopularTv(page: Int = 1): Result<List<TvShow>>
-    suspend fun getTopRatedMovies(page: Int = 1): Result<List<Movie>>
-    suspend fun getNowPlayingMovies(page: Int = 1): Result<List<Movie>>
-    suspend fun getUpcomingMovies(page: Int = 1): Result<List<Movie>>
-    suspend fun getMovieDetails(movieId: Int): Result<MovieDetails>
-    suspend fun getTvDetails(tvId: Int): Result<TvDetails>
-    suspend fun searchMulti(query: String, page: Int = 1): Result<List<Movie>>
-    suspend fun searchMovies(query: String, page: Int = 1): Result<List<Movie>>
-    suspend fun getMovieGenres(): Result<List<Genre>>
+// ─── Cinemeta (replaces TMDB — no API key required) ──────────────────────────
+
+interface CinemetaRepository {
+    suspend fun getTopMovies(): Result<List<Movie>>
+    suspend fun getTopSeries(): Result<List<TvShow>>
+    suspend fun searchMovies(query: String): Result<List<Movie>>
+    suspend fun searchSeries(query: String): Result<List<TvShow>>
+    suspend fun getMovieMeta(imdbId: String): Result<MovieDetails>
+    suspend fun getSeriesMeta(imdbId: String): Result<TvDetails>
 }
+
+// ─── Stream (Torrentio + other addons) ───────────────────────────────────────
 
 interface StreamRepository {
     suspend fun getMovieStreams(imdbId: String): Flow<StreamResult>
@@ -27,20 +24,23 @@ interface StreamRepository {
     suspend fun toggleAddon(addonId: String, enabled: Boolean)
 }
 
+// ─── Local (Room) ─────────────────────────────────────────────────────────────
+
 interface LocalRepository {
+
     // Watch History
     fun getWatchHistory(): Flow<List<WatchHistory>>
     suspend fun addToHistory(item: WatchHistory)
-    suspend fun updateProgress(movieId: Int, progressMs: Long, durationMs: Long)
-    suspend fun removeFromHistory(movieId: Int)
+    suspend fun updateProgress(movieId: String, progressMs: Long, durationMs: Long)
+    suspend fun removeFromHistory(movieId: String)
     suspend fun clearHistory()
-    suspend fun getHistoryForMovie(movieId: Int): WatchHistory?
+    suspend fun getHistoryForMovie(movieId: String): WatchHistory?
 
     // Favorites
     fun getFavorites(): Flow<List<Favorite>>
-    fun isFavorite(movieId: Int): Flow<Boolean>
+    fun isFavorite(movieId: String): Flow<Boolean>
     suspend fun addFavorite(favorite: Favorite)
-    suspend fun removeFavorite(movieId: Int)
+    suspend fun removeFavorite(movieId: String)
 
     // Downloads
     fun getDownloads(): Flow<List<Download>>
@@ -52,7 +52,7 @@ interface LocalRepository {
     // Playback Positions (continue watching)
     suspend fun savePlaybackPosition(position: PlaybackPosition)
     suspend fun getPlaybackPosition(contentId: String): PlaybackPosition?
-    suspend fun getPlaybackPositionByMovieId(movieId: Int): PlaybackPosition?
+    suspend fun getPlaybackPositionByMovieId(movieId: String): PlaybackPosition?
     fun getContinueWatching(limit: Int = 20): Flow<List<PlaybackPosition>>
     suspend fun deletePlaybackPosition(contentId: String)
 

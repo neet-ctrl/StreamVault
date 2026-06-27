@@ -30,7 +30,7 @@ import com.streamvault.app.presentation.ui.components.QualityBadge
 import com.streamvault.app.presentation.ui.theme.*
 import com.streamvault.app.presentation.viewmodel.DownloadsViewModel
 import com.streamvault.app.util.toFormattedSize
-import com.streamvault.app.util.toTmdbImageUrl
+
 
 @Composable
 fun DownloadsScreen(viewModel: DownloadsViewModel = hiltViewModel()) {
@@ -175,7 +175,7 @@ fun DownloadItem(
                     .border(0.5.dp, BlackBorder, RoundedCornerShape(12.dp))
             ) {
                 AsyncImage(
-                    model = download.posterPath?.toTmdbImageUrl("w185"),
+                    model = download.posterPath,
                     contentDescription = download.title,
                     contentScale = ContentScale.Crop,
                     modifier = Modifier.fillMaxSize()

@@ -13,7 +13,7 @@ interface HistoryDao {
     fun getRecentHistory(limit: Int = 20): Flow<List<HistoryEntity>>
 
     @Query("SELECT * FROM watch_history WHERE movieId = :movieId LIMIT 1")
-    suspend fun getHistoryForMovie(movieId: Int): HistoryEntity?
+    suspend fun getHistoryForMovie(movieId: String): HistoryEntity?
 
     @Insert(onConflict = OnConflictStrategy.REPLACE)
     suspend fun insertHistory(entity: HistoryEntity)
@@ -37,16 +37,16 @@ interface FavoriteDao {
     fun getAllFavorites(): Flow<List<FavoriteEntity>>
 
     @Query("SELECT * FROM favorites WHERE movieId = :movieId LIMIT 1")
-    suspend fun getFavorite(movieId: Int): FavoriteEntity?
+    suspend fun getFavorite(movieId: String): FavoriteEntity?
 
     @Insert(onConflict = OnConflictStrategy.REPLACE)
     suspend fun insertFavorite(entity: FavoriteEntity)
 
     @Query("DELETE FROM favorites WHERE movieId = :movieId")
-    suspend fun deleteFavorite(movieId: Int)
+    suspend fun deleteFavorite(movieId: String)
 
     @Query("SELECT EXISTS(SELECT 1 FROM favorites WHERE movieId = :movieId)")
-    fun isFavorite(movieId: Int): Flow<Boolean>
+    fun isFavorite(movieId: String): Flow<Boolean>
 
     @Query("SELECT COUNT(*) FROM favorites")
     suspend fun getFavoriteCount(): Int
@@ -82,7 +82,7 @@ interface DownloadDao {
 @Dao
 interface CachedMovieDao {
     @Query("SELECT * FROM cached_movies WHERE id = :id LIMIT 1")
-    suspend fun getMovie(id: Int): CachedMovieEntity?
+    suspend fun getMovie(id: String): CachedMovieEntity?
 
     @Insert(onConflict = OnConflictStrategy.REPLACE)
     suspend fun insertMovies(movies: List<CachedMovieEntity>)
@@ -103,7 +103,7 @@ interface PlaybackPositionDao {
     suspend fun getPosition(contentId: String): PlaybackPositionEntity?
 
     @Query("SELECT * FROM playback_positions WHERE movieId = :movieId LIMIT 1")
-    suspend fun getPositionByMovieId(movieId: Int): PlaybackPositionEntity?
+    suspend fun getPositionByMovieId(movieId: String): PlaybackPositionEntity?
 
     @Query("SELECT * FROM playback_positions ORDER BY updatedAt DESC")
     fun getAllPositions(): Flow<List<PlaybackPositionEntity>>
@@ -118,7 +118,7 @@ interface PlaybackPositionDao {
     suspend fun deletePosition(contentId: String)
 
     @Query("DELETE FROM playback_positions WHERE movieId = :movieId")
-    suspend fun deletePositionByMovieId(movieId: Int)
+    suspend fun deletePositionByMovieId(movieId: String)
 
     @Query("DELETE FROM playback_positions")
     suspend fun clearAll()

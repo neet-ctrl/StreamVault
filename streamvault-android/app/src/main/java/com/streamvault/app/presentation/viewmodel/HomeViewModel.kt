@@ -4,7 +4,7 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.streamvault.app.domain.model.Movie
 import com.streamvault.app.domain.model.TvShow
-import com.streamvault.app.domain.repository.TmdbRepository
+import com.streamvault.app.domain.repository.CinemetaRepository
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.async
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -27,7 +27,7 @@ data class HomeUiState(
 
 @HiltViewModel
 class HomeViewModel @Inject constructor(
-    private val tmdbRepository: TmdbRepository
+    private val cinemetaRepository: CinemetaRepository
 ) : ViewModel() {
 
     private val _uiState = MutableStateFlow(HomeUiState())
@@ -41,34 +41,27 @@ class HomeViewModel @Inject constructor(
         viewModelScope.launch {
             _uiState.value = _uiState.value.copy(isLoading = true, error = null)
             try {
-                val trendingDeferred = async { tmdbRepository.getTrendingMovies() }
-                val popularMoviesDeferred = async { tmdbRepository.getPopularMovies() }
-                val popularTvDeferred = async { tmdbRepository.getPopularTv() }
-                val topRatedDeferred = async { tmdbRepository.getTopRatedMovies() }
-                val nowPlayingDeferred = async { tmdbRepository.getNowPlayingMovies() }
-                val upcomingDeferred = async { tmdbRepository.getUpcomingMovies() }
+                // Fetch top movies and top series from Cinemeta in parallel
+                val moviesDeferred = async { cinemetaRepository.getTopMovies() }
+                val seriesDeferred = async { cinemetaRepository.getTopSeries() }
 
-                val trending = trendingDeferred.await().getOrDefault(emptyList())
-                val popular = popularMoviesDeferred.await().getOrDefault(emptyList())
-                val popularTv = popularTvDeferred.await().getOrDefault(emptyList())
-                val topRated = topRatedDeferred.await().getOrDefault(emptyList())
-                val nowPlaying = nowPlayingDeferred.await().getOrDefault(emptyList())
-                val upcoming = upcomingDeferred.await().getOrDefault(emptyList())
+                val movies = moviesDeferred.await().getOrDefault(emptyList())
+                val series = seriesDeferred.await().getOrDefault(emptyList())
 
                 _uiState.value = HomeUiState(
-                    isLoading = false,
-                    featured = trending.take(5),
-                    trendingMovies = trending,
-                    popularMovies = popular,
-                    popularTvShows = popularTv,
-                    topRatedMovies = topRated,
-                    nowPlaying = nowPlaying,
-                    upcoming = upcoming
+                    isLoading      = false,
+                    featured       = movies.take(5),
+                    trendingMovies = movies,
+                    popularMovies  = movies,
+                    popularTvShows = series,
+                    topRatedMovies = movies.sortedByDescending { it.voteAverage },
+                    nowPlaying     = movies.take(10),
+                    upcoming       = series.take(10)
                 )
             } catch (e: Exception) {
                 _uiState.value = _uiState.value.copy(
                     isLoading = false,
-                    error = e.message ?: "Failed to load content"
+                    error     = e.message ?: "Failed to load content"
                 )
             }
         }

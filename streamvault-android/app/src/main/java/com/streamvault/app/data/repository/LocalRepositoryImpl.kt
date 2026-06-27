@@ -24,16 +24,16 @@ class LocalRepositoryImpl @Inject constructor(
         historyDao.getAllHistory().map { list ->
             list.map { entity ->
                 WatchHistory(
-                    id = entity.id,
-                    movieId = entity.movieId,
-                    title = entity.title,
+                    id         = entity.id,
+                    movieId    = entity.movieId,
+                    title      = entity.title,
                     posterPath = entity.posterPath,
-                    mediaType = entity.mediaType,
-                    watchedAt = entity.watchedAt,
+                    mediaType  = entity.mediaType,
+                    watchedAt  = entity.watchedAt,
                     progressMs = entity.progressMs,
                     durationMs = entity.durationMs,
-                    season = entity.season,
-                    episode = entity.episode
+                    season     = entity.season,
+                    episode    = entity.episode
                 )
             }
         }
@@ -41,49 +41,49 @@ class LocalRepositoryImpl @Inject constructor(
     override suspend fun addToHistory(item: WatchHistory) {
         historyDao.insertHistory(
             HistoryEntity(
-                id = item.id,
-                movieId = item.movieId,
-                title = item.title,
+                id         = item.id,
+                movieId    = item.movieId,
+                title      = item.title,
                 posterPath = item.posterPath,
-                mediaType = item.mediaType,
-                watchedAt = item.watchedAt,
+                mediaType  = item.mediaType,
+                watchedAt  = item.watchedAt,
                 progressMs = item.progressMs,
                 durationMs = item.durationMs,
-                season = item.season,
-                episode = item.episode
+                season     = item.season,
+                episode    = item.episode
             )
         )
     }
 
-    override suspend fun updateProgress(movieId: Int, progressMs: Long, durationMs: Long) {
+    override suspend fun updateProgress(movieId: String, progressMs: Long, durationMs: Long) {
         val existing = historyDao.getHistoryForMovie(movieId)
         if (existing != null) {
             historyDao.insertHistory(
                 existing.copy(
                     progressMs = progressMs,
                     durationMs = durationMs,
-                    watchedAt = System.currentTimeMillis()
+                    watchedAt  = System.currentTimeMillis()
                 )
             )
         }
     }
 
-    override suspend fun removeFromHistory(movieId: Int) {
+    override suspend fun removeFromHistory(movieId: String) {
         val existing = historyDao.getHistoryForMovie(movieId)
         existing?.let { historyDao.deleteHistory(it) }
     }
 
     override suspend fun clearHistory() = historyDao.clearAllHistory()
 
-    override suspend fun getHistoryForMovie(movieId: Int): WatchHistory? =
+    override suspend fun getHistoryForMovie(movieId: String): WatchHistory? =
         historyDao.getHistoryForMovie(movieId)?.let { entity ->
             WatchHistory(
-                id = entity.id,
-                movieId = entity.movieId,
-                title = entity.title,
+                id         = entity.id,
+                movieId    = entity.movieId,
+                title      = entity.title,
                 posterPath = entity.posterPath,
-                mediaType = entity.mediaType,
-                watchedAt = entity.watchedAt,
+                mediaType  = entity.mediaType,
+                watchedAt  = entity.watchedAt,
                 progressMs = entity.progressMs,
                 durationMs = entity.durationMs
             )
@@ -95,34 +95,34 @@ class LocalRepositoryImpl @Inject constructor(
         favoriteDao.getAllFavorites().map { list ->
             list.map { entity ->
                 Favorite(
-                    id = entity.id,
-                    movieId = entity.movieId,
-                    title = entity.title,
+                    id         = entity.id,
+                    movieId    = entity.movieId,
+                    title      = entity.title,
                     posterPath = entity.posterPath,
-                    mediaType = entity.mediaType,
-                    addedAt = entity.addedAt,
-                    rating = entity.rating
+                    mediaType  = entity.mediaType,
+                    addedAt    = entity.addedAt,
+                    rating     = entity.rating
                 )
             }
         }
 
-    override fun isFavorite(movieId: Int): Flow<Boolean> = favoriteDao.isFavorite(movieId)
+    override fun isFavorite(movieId: String): Flow<Boolean> = favoriteDao.isFavorite(movieId)
 
     override suspend fun addFavorite(favorite: Favorite) {
         favoriteDao.insertFavorite(
             FavoriteEntity(
-                id = favorite.id,
-                movieId = favorite.movieId,
-                title = favorite.title,
+                id         = favorite.id,
+                movieId    = favorite.movieId,
+                title      = favorite.title,
                 posterPath = favorite.posterPath,
-                mediaType = favorite.mediaType,
-                addedAt = favorite.addedAt,
-                rating = favorite.rating
+                mediaType  = favorite.mediaType,
+                addedAt    = favorite.addedAt,
+                rating     = favorite.rating
             )
         )
     }
 
-    override suspend fun removeFavorite(movieId: Int) = favoriteDao.deleteFavorite(movieId)
+    override suspend fun removeFavorite(movieId: String) = favoriteDao.deleteFavorite(movieId)
 
     // ────────────────────── Downloads ──────────────────────
 
@@ -130,23 +130,23 @@ class LocalRepositoryImpl @Inject constructor(
         downloadDao.getAllDownloads().map { list ->
             list.map { entity ->
                 Download(
-                    id = entity.id,
-                    movieId = entity.movieId,
-                    title = entity.title,
-                    posterPath = entity.posterPath,
-                    quality = entity.quality,
-                    filePath = entity.filePath,
-                    totalSize = entity.totalSize,
-                    downloadedSize = entity.downloadedSize,
-                    status = DownloadStatus.valueOf(entity.status),
-                    createdAt = entity.createdAt,
-                    completedAt = entity.completedAt,
-                    infoHash = entity.infoHash,
-                    fileIdx = entity.fileIdx,
-                    seedCount = entity.seedCount,
-                    peerCount = entity.peerCount,
+                    id               = entity.id,
+                    movieId          = entity.movieId,
+                    title            = entity.title,
+                    posterPath       = entity.posterPath,
+                    quality          = entity.quality,
+                    filePath         = entity.filePath,
+                    totalSize        = entity.totalSize,
+                    downloadedSize   = entity.downloadedSize,
+                    status           = DownloadStatus.valueOf(entity.status),
+                    createdAt        = entity.createdAt,
+                    completedAt      = entity.completedAt,
+                    infoHash         = entity.infoHash,
+                    fileIdx          = entity.fileIdx,
+                    seedCount        = entity.seedCount,
+                    peerCount        = entity.peerCount,
                     downloadSpeedBps = entity.downloadSpeedBps,
-                    etaSeconds = entity.etaSeconds
+                    etaSeconds       = entity.etaSeconds
                 )
             }
         }
@@ -154,36 +154,36 @@ class LocalRepositoryImpl @Inject constructor(
     override suspend fun getDownload(id: String): Download? =
         downloadDao.getDownload(id)?.let { entity ->
             Download(
-                id = entity.id,
-                movieId = entity.movieId,
-                title = entity.title,
-                posterPath = entity.posterPath,
-                quality = entity.quality,
-                filePath = entity.filePath,
-                totalSize = entity.totalSize,
+                id             = entity.id,
+                movieId        = entity.movieId,
+                title          = entity.title,
+                posterPath     = entity.posterPath,
+                quality        = entity.quality,
+                filePath       = entity.filePath,
+                totalSize      = entity.totalSize,
                 downloadedSize = entity.downloadedSize,
-                status = DownloadStatus.valueOf(entity.status),
-                infoHash = entity.infoHash,
-                fileIdx = entity.fileIdx
+                status         = DownloadStatus.valueOf(entity.status),
+                infoHash       = entity.infoHash,
+                fileIdx        = entity.fileIdx
             )
         }
 
     override suspend fun insertDownload(download: Download) {
         downloadDao.insertDownload(
             DownloadEntity(
-                id = download.id,
-                movieId = download.movieId,
-                title = download.title,
-                posterPath = download.posterPath,
-                quality = download.quality,
-                filePath = download.filePath,
-                totalSize = download.totalSize,
+                id             = download.id,
+                movieId        = download.movieId,
+                title          = download.title,
+                posterPath     = download.posterPath,
+                quality        = download.quality,
+                filePath       = download.filePath,
+                totalSize      = download.totalSize,
                 downloadedSize = download.downloadedSize,
-                status = download.status.name,
-                createdAt = download.createdAt,
-                completedAt = download.completedAt,
-                infoHash = download.infoHash,
-                fileIdx = download.fileIdx
+                status         = download.status.name,
+                createdAt      = download.createdAt,
+                completedAt    = download.completedAt,
+                infoHash       = download.infoHash,
+                fileIdx        = download.fileIdx
             )
         )
     }
@@ -199,16 +199,16 @@ class LocalRepositoryImpl @Inject constructor(
     override suspend fun savePlaybackPosition(position: PlaybackPosition) {
         playbackPositionDao.insertOrUpdate(
             PlaybackPositionEntity(
-                contentId = position.contentId,
-                movieId = position.movieId,
-                title = position.title,
+                contentId  = position.contentId,
+                movieId    = position.movieId,
+                title      = position.title,
                 posterPath = position.posterPath,
-                mediaType = position.mediaType,
+                mediaType  = position.mediaType,
                 positionMs = position.positionMs,
                 durationMs = position.durationMs,
-                season = position.season,
-                episode = position.episode,
-                updatedAt = System.currentTimeMillis()
+                season     = position.season,
+                episode    = position.episode,
+                updatedAt  = System.currentTimeMillis()
             )
         )
     }
@@ -216,7 +216,7 @@ class LocalRepositoryImpl @Inject constructor(
     override suspend fun getPlaybackPosition(contentId: String): PlaybackPosition? =
         playbackPositionDao.getPosition(contentId)?.toModel()
 
-    override suspend fun getPlaybackPositionByMovieId(movieId: Int): PlaybackPosition? =
+    override suspend fun getPlaybackPositionByMovieId(movieId: String): PlaybackPosition? =
         playbackPositionDao.getPositionByMovieId(movieId)?.toModel()
 
     override fun getContinueWatching(limit: Int): Flow<List<PlaybackPosition>> =
@@ -238,16 +238,16 @@ class LocalRepositoryImpl @Inject constructor(
     override suspend fun saveSubtitlePreferences(prefs: SubtitlePreference) {
         subtitlePreferenceDao.savePreferences(
             SubtitlePreferenceEntity(
-                language = prefs.language,
-                languageCode = prefs.languageCode,
-                sizeScale = prefs.sizeScale,
-                fontFamily = prefs.fontFamily,
-                textColor = prefs.textColor,
+                language        = prefs.language,
+                languageCode    = prefs.languageCode,
+                sizeScale       = prefs.sizeScale,
+                fontFamily      = prefs.fontFamily,
+                textColor       = prefs.textColor,
                 backgroundColor = prefs.backgroundColor,
-                boldEnabled = prefs.boldEnabled,
-                italicEnabled = prefs.italicEnabled,
-                outlineEnabled = prefs.outlineEnabled,
-                delayMs = prefs.delayMs
+                boldEnabled     = prefs.boldEnabled,
+                italicEnabled   = prefs.italicEnabled,
+                outlineEnabled  = prefs.outlineEnabled,
+                delayMs         = prefs.delayMs
             )
         )
     }
@@ -257,27 +257,27 @@ class LocalRepositoryImpl @Inject constructor(
 }
 
 private fun PlaybackPositionEntity.toModel() = PlaybackPosition(
-    contentId = contentId,
-    movieId = movieId,
-    title = title,
+    contentId  = contentId,
+    movieId    = movieId,
+    title      = title,
     posterPath = posterPath,
-    mediaType = mediaType,
+    mediaType  = mediaType,
     positionMs = positionMs,
     durationMs = durationMs,
-    season = season,
-    episode = episode,
-    updatedAt = updatedAt
+    season     = season,
+    episode    = episode,
+    updatedAt  = updatedAt
 )
 
 private fun SubtitlePreferenceEntity.toModel() = SubtitlePreference(
-    language = language,
-    languageCode = languageCode,
-    sizeScale = sizeScale,
-    fontFamily = fontFamily,
-    textColor = textColor,
+    language        = language,
+    languageCode    = languageCode,
+    sizeScale       = sizeScale,
+    fontFamily      = fontFamily,
+    textColor       = textColor,
     backgroundColor = backgroundColor,
-    boldEnabled = boldEnabled,
-    italicEnabled = italicEnabled,
-    outlineEnabled = outlineEnabled,
-    delayMs = delayMs
+    boldEnabled     = boldEnabled,
+    italicEnabled   = italicEnabled,
+    outlineEnabled  = outlineEnabled,
+    delayMs         = delayMs
 )

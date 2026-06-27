@@ -1,7 +1,11 @@
 package com.streamvault.app.domain.model
 
+/**
+ * All IDs are IMDB IDs (String, e.g. "tt1234567") — no TMDB integer IDs.
+ * Poster / backdrop paths are absolute URLs supplied by Cinemeta.
+ */
 data class Movie(
-    val id: Int,
+    val id: String,
     val title: String,
     val overview: String,
     val posterPath: String?,
@@ -9,7 +13,7 @@ data class Movie(
     val releaseDate: String,
     val voteAverage: Double,
     val voteCount: Int,
-    val genreIds: List<Int>,
+    val genreIds: List<Int> = emptyList(),
     val genres: List<String> = emptyList(),
     val runtime: Int? = null,
     val tagline: String? = null,
@@ -21,7 +25,7 @@ data class Movie(
 )
 
 data class TvShow(
-    val id: Int,
+    val id: String,
     val name: String,
     val overview: String,
     val posterPath: String?,
@@ -29,7 +33,7 @@ data class TvShow(
     val firstAirDate: String,
     val voteAverage: Double,
     val voteCount: Int,
-    val genreIds: List<Int>,
+    val genreIds: List<Int> = emptyList(),
     val genres: List<String> = emptyList(),
     val numberOfSeasons: Int = 0,
     val numberOfEpisodes: Int = 0,
@@ -95,7 +99,7 @@ enum class MediaType {
 }
 
 data class Genre(
-    val id: Int,
+    val id: String,
     val name: String
 )
 

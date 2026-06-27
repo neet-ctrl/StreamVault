@@ -68,8 +68,6 @@ jobs:
       # ── Build ─────────────────────────────────────────────────────────────
       - name: Build Debug APK
         working-directory: ${{ env.PROJECT_DIR }}
-        env:
-          TMDB_API_KEY: ${{ secrets.TMDB_API_KEY }}
         run: ./gradlew assembleDebug --stacktrace --no-daemon
 
       # ── Rename APK with short SHA ─────────────────────────────────────────

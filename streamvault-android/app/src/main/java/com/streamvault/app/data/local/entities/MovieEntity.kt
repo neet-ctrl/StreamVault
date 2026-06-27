@@ -6,7 +6,8 @@ import androidx.room.PrimaryKey
 @Entity(tableName = "watch_history")
 data class HistoryEntity(
     @PrimaryKey val id: String,
-    val movieId: Int,
+    /** IMDB ID, e.g. "tt1234567" */
+    val movieId: String,
     val title: String,
     val posterPath: String?,
     val mediaType: String,
@@ -20,7 +21,8 @@ data class HistoryEntity(
 @Entity(tableName = "favorites")
 data class FavoriteEntity(
     @PrimaryKey val id: String,
-    val movieId: Int,
+    /** IMDB ID, e.g. "tt1234567" */
+    val movieId: String,
     val title: String,
     val posterPath: String?,
     val mediaType: String,
@@ -31,7 +33,8 @@ data class FavoriteEntity(
 @Entity(tableName = "downloads")
 data class DownloadEntity(
     @PrimaryKey val id: String,
-    val movieId: Int,
+    /** IMDB ID, e.g. "tt1234567" */
+    val movieId: String,
     val title: String,
     val posterPath: String?,
     val quality: String,
@@ -51,7 +54,8 @@ data class DownloadEntity(
 
 @Entity(tableName = "cached_movies")
 data class CachedMovieEntity(
-    @PrimaryKey val id: Int,
+    /** IMDB ID, e.g. "tt1234567" */
+    @PrimaryKey val id: String,
     val title: String,
     val overview: String,
     val posterPath: String?,
@@ -68,7 +72,8 @@ data class CachedMovieEntity(
 @Entity(tableName = "playback_positions")
 data class PlaybackPositionEntity(
     @PrimaryKey val contentId: String,
-    val movieId: Int,
+    /** IMDB ID, e.g. "tt1234567" */
+    val movieId: String,
     val title: String,
     val posterPath: String?,
     val mediaType: String,
@@ -81,11 +86,8 @@ data class PlaybackPositionEntity(
     val progressPercent: Double
         get() = if (durationMs > 0) (positionMs.toDouble() / durationMs) * 100 else 0.0
 
-    val isFinished: Boolean
-        get() = progressPercent >= 90.0
-
-    val isStarted: Boolean
-        get() = progressPercent >= 1.0
+    val isFinished: Boolean get() = progressPercent >= 90.0
+    val isStarted: Boolean  get() = progressPercent >= 1.0
 }
 
 @Entity(tableName = "subtitle_preferences")
