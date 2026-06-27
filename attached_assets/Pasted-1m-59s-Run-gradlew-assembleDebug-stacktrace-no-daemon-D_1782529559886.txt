@@ -1,0 +1,61 @@
+1m 59s
+Run ./gradlew assembleDebug --stacktrace --no-daemon
+  
+Downloading https://services.gradle.org/distributions/gradle-8.4-bin.zip
+............10%............20%.............30%............40%.............50%............60%.............70%............80%.............90%............100%
+To honour the JVM settings for this build a single-use Daemon process will be forked. For more on this, please refer to https://docs.gradle.org/8.4/userguide/gradle_daemon.html#sec:disabling_the_daemon in the Gradle documentation.
+Daemon will be stopped at the end of the build 
+Configuration on demand is an incubating feature.
+> Task :app:preBuild UP-TO-DATE
+> Task :app:preDebugBuild UP-TO-DATE
+> Task :app:mergeDebugNativeDebugMetadata NO-SOURCE
+> Task :app:checkKotlinGradlePluginConfigurationErrors
+> Task :app:generateDebugBuildConfig
+
+> Task :app:checkDebugAarMetadata
+WARNING: [Processor] Library '/home/runner/.gradle/caches/modules-2/files-2.1/androidx.media3/media3-ui/1.2.1/8794bbc81c7dd40754e9539fcdda1ba5c999e29b/media3-ui-1.2.1.aar' contains references to both AndroidX and old support library. This seems like the library is partially migrated. Jetifier will try to rewrite the library anyway.
+ Example of androidX reference: 'androidx/media3/ui/PlayerNotificationManager'
+ Example of support library reference: 'android/support/v4/media/session/MediaSessionCompat$Token'
+WARNING: [Processor] Library '/home/runner/.gradle/caches/modules-2/files-2.1/androidx.media3/media3-session/1.2.1/cbf4e0a569db4a31cbae164ad04ee66cdbff5105/media3-session-1.2.1.aar' contains references to both AndroidX and old support library. This seems like the library is partially migrated. Jetifier will try to rewrite the library anyway.
+ Example of androidX reference: 'androidx/media3/session/LegacyConversions'
+ Example of support library reference: 'android/support/v4/media/session/MediaControllerCompat$PlaybackInfo'
+
+> Task :app:generateDebugResValues
+> Task :app:mapDebugSourceSetPaths
+> Task :app:generateDebugResources
+> Task :app:packageDebugResources
+> Task :app:createDebugCompatibleScreenManifests
+> Task :app:extractDeepLinksDebug
+> Task :app:mergeDebugResources
+> Task :app:parseDebugLocalResources
+> Task :app:processDebugMainManifest
+> Task :app:processDebugManifest
+> Task :app:javaPreCompileDebug
+> Task :app:mergeDebugShaders
+> Task :app:compileDebugShaders NO-SOURCE
+> Task :app:generateDebugAssets UP-TO-DATE
+> Task :app:mergeDebugAssets FROM-CACHE
+> Task :app:compressDebugAssets
+> Task :app:desugarDebugFileDependencies
+> Task :app:mergeDebugJniLibFolders FROM-CACHE
+> Task :app:checkDebugDuplicateClasses
+> Task :app:mergeDebugNativeLibs
+> Task :app:processDebugManifestForPackage
+> Task :app:mergeExtDexDebug
+> Task :app:mergeLibDexDebug
+
+> Task :app:stripDebugDebugSymbols
+Unable to strip the following libraries, packaging them as they are: libtorrent4j.so.
+
+> Task :app:processDebugResources FAILED
+> Task :app:validateSigningDebug
+
+FAILURE: Build failed with an exception.
+
+* What went wrong:
+Execution failed for task ':app:processDebugResources'.
+> A failure occurred while executing com.android.build.gradle.internal.res.LinkApplicationAndroidResourcesTask$TaskAction
+   > Android resource linking failed
+     error: resource style/Theme.Material3.Dark.NoActionBar (aka com.streamvault.app.debug:style/Theme.Material3.Dark.NoActionBar) not found.
+     com.streamvault.app-mergeDebugResources-77:/values/values.xml:865: error: style attribute 'attr/colorPrimary (aka com.streamvault.app.debug:attr/colorPrimary)' not found.
+     com.streamvault.app-mergeDebugResources-77:/values/values.xml:866: error: style attribute 'attr/colorOnPrimary (aka com.streamvault.app.debug:attr/colorOnPrimary)' not found.
